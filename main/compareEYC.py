@@ -12,10 +12,13 @@ import facenet
 import align.detect_face
 import csv
 import pandas as pd
+import glob
 
 def main(args):
+    
+    image_files = glob.glob(args.image_dir +  "/PRE*.jpg")
 
-    images, face_image_paths = facenet.load_and_align_data(args.image_files, args.image_size, args.margin, args.gpu_memory_fraction)
+    images, face_image_paths = facenet.load_and_align_data(image_files, args.image_size, args.margin, args.gpu_memory_fraction)
     with tf.Graph().as_default():
 
         with tf.Session() as sess:
@@ -41,7 +44,7 @@ def parse_arguments(argv):
     
     parser.add_argument('model', type=str, 
         help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file')
-    parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
+    parser.add_argument('image_dir', type=str, help='Images to compare')
     parser.add_argument('--image_size', type=int,
         help='Image size (height, width) in pixels.', default=160)
     parser.add_argument('--margin', type=int,
