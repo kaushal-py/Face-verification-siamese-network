@@ -59,6 +59,7 @@ dependencies:
 - numpy=1.13.3=py35hd829ed6_0
 - olefile=0.44=py35h2c86149_0
 - openssl=1.0.2m=h26d622b_1
+- pandas=0.21.0=py35hee8c687_1
 - pandoc=1.19.2.1=hea2e7c5_1
 - pandocfilters=1.4.2=py35h1565a15_1
 - pcre=8.41=hc27e229_1
