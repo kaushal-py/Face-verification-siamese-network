@@ -35,6 +35,7 @@ def main(args):
             feed_dict = { images_placeholder: images, phase_train_placeholder:False }
             emb = sess.run(embeddings, feed_dict=feed_dict)
 
+            # Store the embeddings to csv
             df = pd.DataFrame(emb,index=face_image_paths)
             df.to_csv('embeddings.csv')
 

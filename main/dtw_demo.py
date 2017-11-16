@@ -38,7 +38,7 @@ def DTW(A, B, window = sys.maxsize, d = lambda x,y: abs(x-y)):
 def main():
     A, B = np.array([1,2,3,4,2,3]), np.array([1,1,3,3,4,3,3])
     C = np.array([7,8,5,9,11,9])
-    # B = C
+    B = C
     cost, path = DTW(A, B, window = 4)
     print ('Total Distance is ', cost)
     import matplotlib.pyplot as plt
