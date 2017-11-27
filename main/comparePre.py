@@ -46,51 +46,42 @@ def RMS(A, B):
 
 ################ Main ##############
 def main():
+
+    #file name
+    file_name = 'embeddings/embeddings-PRE-new.csv'
+    #number of images
+    noOfImages = 1000
+
     # Get the embeddings from csv
-    arr_pre = genfromtxt('embeddings/embeddings-PRE.csv', delimiter=',')
-    arr_post = genfromtxt('embeddings/embeddings-POST.csv', delimiter=',')
+    arr_img = genfromtxt(file_name, delimiter=',')
 
     # Remove index
-    arr_pre = np.delete(arr_pre, 0, 1)
-    arr_post = np.delete(arr_post, 0, 1)
+    arr_img = np.delete(arr_img, 0, 1)
 
-    # Get pre and post names
-    post_names = []
-    pre_names = []
-    with open('embeddings/embeddings-PRE.csv', 'r') as f:
+    # Get image names
+    img_names = []
+    with open(file_name, 'r') as f:
         csv_reader = csv.reader(f, delimiter=',')
         for row in csv_reader:
-            pre_names.append(row[0])
-    with open('embeddings/embeddings-POST.csv', 'r') as f:
-        csv_reader = csv.reader(f, delimiter=',')
-        for row in csv_reader:
-            post_names.append(row[0])
+            img_names.append(row[0])
             
-    # Initialise count of images correctly recognised
-    count = 0
-    min_dist_arr = []
-    # Loop through pre-op images
-    for i in range(1,1000):
+    # Loop through images
+    for i in range(1,noOfImages):
         # get pre op name
-        pre = pre_names[i]
-        pre = pre[11:18]
-
-        # Set minimun distance between emdeddings to inf
-        min_dist = 2000
-        post_min = ""
+        img = img_names[i]
 
         # Count of distance < 1
         count_less_than_1 = 0
+
+        # Match array
+        match_array = []
         
         # loop through post-op images
-        for j in range(1,836):
-            # get post op name
-            post = post_names[j]
-            post = post[12:19]
+        for j in range(1,noOfImages):
 
-            # get embeddings of pre and post op
-            A = arr_pre[i]
-            B = arr_post[j]
+            # get embeddings of both images
+            A = arr_img[i]
+            B = arr_img[j]
 
             # Perform DTW comparison betwen the embeddings and get the distance
             # distance, _ = DTW(A, B, window = 4)
@@ -99,27 +90,27 @@ def main():
             distance = RMS(A, B)
 
             # Check for minimum distance
-            if distance < min_dist:
-                min_dist = distance
-                post_min = post
+            # if distance < min_dist:
+            #     min_dist = distance
+            #     post_min = post
 
-            # Check for if distane < 1
-            if distance < 0.6:
+            # Check for if distane < 0.5
+            if distance < 0.55 and distance != 0:
                 count_less_than_1 +=1
+                match_array.append(img_names[j])
         
-        #print(pre, count_less_than_1, sep=' : ')
+        if count_less_than_1 > 0:
+            print(img, count_less_than_1, sep=' : ')
 
-        #if pre-op and post-op image match (testing)
-        if pre == post_min:
-            count+=1
+        # if pre-op and post-op image match (testing)
+        # if pre == post_min:
+        #     count+=1
 
-        min_dist_arr.append(min_dist)
-        os.system('clear')
-        #Progress tracker
-        print("Images matched :", count)
-        print("Processed : ", i, "/ 999")
-    
-    #print(max(min_dist_arr), min(min_dist_arr))
+        #min_dist_arr.append(min_dist)
+        #os.system('clear')
+        # Progress tracker
+        #print("Images matched :", count)
+        #print("Processed : ", i, "/ 999")
 
 if __name__ == '__main__':
     main()
