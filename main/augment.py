@@ -1,21 +1,9 @@
-import cv2
-import numpy as np
-import glob
-import os
-# cv2.imshow("image", im)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+import Augmentor
+p = Augmentor.Pipeline("images/")
 
-people = glob.glob("images/*")
-count = 0
-for person in people:
-    
-    images = glob.glob(person + "/*.jpg")
-    for img_path in images:
-        im = cv2.imread(img_path)
-        resized_image = cv2.resize(im, (150, 150))
-        cv2.imwrite(
-                img_path,
-                resized_image)   
-        count += 1
-        print("Done : ", count)
+p.flip_left_right(probability=0.5)
+p.rotate(probability=0.7, max_left_rotation=10, max_right_rotation=10)
+p.zoom(probability=0.3, min_factor=1, max_factor=1.1)
+p.skew_tilt(probability=0.3)
+
+p.sample(10000)
