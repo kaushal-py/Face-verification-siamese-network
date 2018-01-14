@@ -11,7 +11,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data.tar.gz", train=False, train_size=800):
+    def __init__(self, zip_path="main/eyc-data.tar.gz", train=False, train_size=800):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -53,28 +53,22 @@ class EycDataset(Dataset):
         data_post_train = data_post[:self.train_size]
         data_post_test = data_post[self.train_size:]
 
+        print("Making training and test data..")
+
         self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
         self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
         self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
         self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
 
-        # print(data_post[0:5])        
-        # print(data_pre[0:5])        
-        # count = 0
-        # for i in range(1000):
-        #     if data_pre != data_post:
-        #         count += 1
-        # print(count)
-
-        # if self.train:
-        #     self.augment_images(".eycdata/pre")
-        #     self.augment_images(".eycdata/post")
+        if self.train:
+            self.augment_images(".eycdata/train/pre")
+            self.augment_images(".eycdata/train/post")
 
     def __len__(self):
         pass
     
     def __getitem__(self, idx):
-        
+        pass
     
     def moveToFolder(self, src_folder, src_list, dest_folder):
         '''
@@ -114,4 +108,4 @@ class EycDataset(Dataset):
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
 
 if __name__ == "__main__":
-    eyc_data = EycDataset()
+    eyc_data = EycDataset(train=True)
