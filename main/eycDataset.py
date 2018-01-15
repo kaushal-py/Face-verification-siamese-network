@@ -4,6 +4,8 @@ import tarfile
 import shutil
 from torch.utils.data import Dataset, DataLoader
 import Augmentor
+from matplotlib import pyplot as plt
+from matplotlib import image as mpimg
 
 class EycDataset(Dataset):
     """
@@ -55,20 +57,67 @@ class EycDataset(Dataset):
 
         print("Making training and test data..")
 
-        self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
-        self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
-        self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
-        self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
+        # self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
+        # self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
+        # self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
+        # self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
 
         if self.train:
             self.augment_images(".eycdata/train/pre")
             self.augment_images(".eycdata/train/post")
 
     def __len__(self):
-        pass
+        return 800
     
     def __getitem__(self, idx):
-        pass
+        cwd = os.getcwd()
+        pre = cwd+"/.eycdata/train/pre"
+        post = cwd+"/.eycdata/train/post"
+        curr = pre
+        # Anchor
+        person = sorted(os.listdir(curr))[idx]
+        fol = curr+"/"+person
+        for file in os.listdir(fol):
+            anchor = file
+            anchor = mpimg.imread(os.path.join(fol,anchor))
+            
+        # Positive
+        probaility = random.randint(1,100)
+        if probaility>80:
+            if curr == pre:
+                curr = post
+            else:
+                curr = pre
+        else:
+            if curr == pre:
+                curr = pre
+            else:
+                curr = post
+        pos_fol = curr+"/augmented/"+person
+        positive = random.choice(os.listdir(pos_fol))
+        positive = mpimg.imread(os.path.join(pos_fol,positive))
+        
+        # Negative
+        probaility = random.randint(1,10)
+        if probaility>6:
+            if curr == pre:
+                curr = post
+            else:
+                curr = pre
+        else:
+            if curr == pre:
+                curr = pre
+            else:
+                curr = post
+        fol = curr+"/augmented/"
+        while True:
+            neg_fol = random.choice(os.listdir(fol))
+            if neg_fol != pos_fol:
+                break
+        negative = random.choice(os.listdir(fol+neg_fol))
+        negative = mpimg.imread(os.path.join(fol+neg_fol,negative))
+        
+        return anchor, positive, negative
     
     def moveToFolder(self, src_folder, src_list, dest_folder):
         '''

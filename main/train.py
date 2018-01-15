@@ -24,17 +24,18 @@ criterion = TripletLoss()
 optimizer = optim.Adam(net.parameters(),lr = 0.0005 )
 print("njdf")
 for epoch in range(0,epoch_num):
-    for i, data in enumerate(train_dataloader,0):
+    for data in train_dataloader:
         (anchor, positive, negative) = data
+        print("saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         # img0, img1 , label = Variable(img0).cuda(), Variable(img1).cuda() , Variable(label).cuda()
         (anchor_output, positive_output, negative_output)  = net(anchor, positive, negative)
         optimizer.zero_grad()
         loss_triplet = criterion(anchor_output, positive_output, negative_output)
         loss_triplet.backward()
         optimizer.step()
-        if i %10 == 0 :
+        if 57 %10 == 0 :
             print("Epoch number {}\n Current loss {}\n".format(epoch,loss_triplet.data[0]))
             iteration_number +=10
             counter.append(iteration_number)
             loss_history.append(loss_triplet.data[0])
-            np.save("loss_history.npy"+(i%10),loss_history)
+            # np.save("loss_history.npy"+(%10),loss_history)
