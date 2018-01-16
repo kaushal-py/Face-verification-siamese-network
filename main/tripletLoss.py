@@ -6,7 +6,7 @@ class TripletLoss(torch.nn.Module):
     Triplet loss function.
     """
 
-    def __init__(self, margin=2.0):
+    def __init__(self, margin=1):
         super(TripletLoss, self).__init__()
         self.margin = margin
 

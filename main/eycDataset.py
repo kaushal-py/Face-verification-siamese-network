@@ -3,9 +3,10 @@ import random
 import tarfile
 import shutil
 from torch.utils.data import Dataset, DataLoader
+import torchvision.datasets as dset
 import Augmentor
-from matplotlib import pyplot as plt
-from matplotlib import image as mpimg
+from PIL import Image
+import torchvision.transforms as transforms
 
 class EycDataset(Dataset):
     """
@@ -13,7 +14,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="main/eyc-data.tar.gz", train=False, train_size=800):
+    def __init__(self, zip_path="eyc-data.tar.gz", train=False, train_size=800):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -67,19 +68,19 @@ class EycDataset(Dataset):
             self.augment_images(".eycdata/train/post")
 
     def __len__(self):
-        return 800
+        return 200
     
     def __getitem__(self, idx):
-        cwd = os.getcwd()
-        pre = cwd+"/.eycdata/train/pre"
-        post = cwd+"/.eycdata/train/post"
+        
+        pre = ".eycdata/train/pre"
+        post = ".eycdata/train/post"
+
         curr = pre
         # Anchor
         person = sorted(os.listdir(curr))[idx]
         fol = curr+"/"+person
-        for file in os.listdir(fol):
-            anchor = file
-            anchor = mpimg.imread(os.path.join(fol,anchor))
+
+        anchor = Image.open(os.path.join(fol, os.listdir(fol)[0]))
             
         # Positive
         probaility = random.randint(1,100)
@@ -93,9 +94,11 @@ class EycDataset(Dataset):
                 curr = pre
             else:
                 curr = post
-        pos_fol = curr+"/augmented/"+person
+
+        pos_fol = curr+"/"+person
+
         positive = random.choice(os.listdir(pos_fol))
-        positive = mpimg.imread(os.path.join(pos_fol,positive))
+        positive =  Image.open(os.path.join(pos_fol,positive))
         
         # Negative
         probaility = random.randint(1,10)
@@ -109,13 +112,23 @@ class EycDataset(Dataset):
                 curr = pre
             else:
                 curr = post
-        fol = curr+"/augmented/"
+        fol = curr+"/"
         while True:
             neg_fol = random.choice(os.listdir(fol))
             if neg_fol != pos_fol:
                 break
         negative = random.choice(os.listdir(fol+neg_fol))
-        negative = mpimg.imread(os.path.join(fol+neg_fol,negative))
+        negative = Image.open(os.path.join(fol+neg_fol,negative))
+
+        transform=transforms.Compose([transforms.ToTensor()])
+
+        anchor = anchor.convert("L")
+        positive = positive.convert("L")
+        negative = negative.convert("L")
+
+        anchor = transform(anchor)
+        positive = transform(positive)
+        negative = transform(negative)
         
         return anchor, positive, negative
     
