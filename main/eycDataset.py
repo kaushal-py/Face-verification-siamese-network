@@ -39,86 +39,72 @@ class EycDataset(Dataset):
             eyc_tar = tarfile.open(zip_path, "r:gz")
             eyc_tar.extractall(self.dataset_folder_name)
             print("Done extracting files to ", self.dataset_folder_name)
+
+            # Get pre and post image files from the directory
+            data_pre = sorted(os.listdir(".eycdata/pre"))
+            data_post = sorted(os.listdir(".eycdata/post"))
+
+            # Randomize the data
+            data_pair = list(zip(data_pre, data_post))
+            random.shuffle(data_pair)
+            data_pre, data_post = zip(*data_pair)
+
+            # Split into training and testing sets
+            data_pre_train = data_pre[:self.train_size]
+            data_pre_test = data_pre[self.train_size:]
+            data_post_train = data_post[:self.train_size]
+            data_post_test = data_post[self.train_size:]
+
+            print("Making training and test data..")
+
+            self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
+            self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
+            self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
+            self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
+
         else:
-            print("Zipped Data already extracted.")
-
-        # Get pre and post image files from the directory
-        data_pre = sorted(os.listdir(".eycdata/pre"))
-        data_post = sorted(os.listdir(".eycdata/post"))
-
-        # Randomize the data
-        data_pair = list(zip(data_pre, data_post))
-        random.shuffle(data_pair)
-        data_pre, data_post = zip(*data_pair)
-
-        # Split into training and testing sets
-        data_pre_train = data_pre[:self.train_size]
-        data_pre_test = data_pre[self.train_size:]
-        data_post_train = data_post[:self.train_size]
-        data_post_test = data_post[self.train_size:]
-
-        print("Making training and test data..")
-
-        # self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
-        # self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
-        # self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
-        # self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
+            print("Data folder already created.")
 
         if self.train:
             self.augment_images(".eycdata/train/pre")
             self.augment_images(".eycdata/train/post")
 
     def __len__(self):
-        return 200
+        dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
+        return len(dataset_pre)
     
     def __getitem__(self, idx):
-        
-        curr = "pre"
+
         if self.train == True:
             dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
             dataset_post = dset.ImageFolder(root=Config.training_dir_post)
+            number_of_images = len(dataset_pre)
         else:
             dataset_pre = dset.ImageFolder(root=Config.testing_dir_pre)
             dataset_post = dset.ImageFolder(root=Config.testing_dir_post)
-        img_tuple_pre = dataset_pre.imgs
-        img_tuple_post = dataset_post.imgs
+            number_of_images = len(dataset_pre)
         
         # Anchor
-        img_tuple = dataset_pre.imgs
-        anchor = Image.open(img_tuple[idx][0])
+        anchor_tuple = dataset_pre.imgs[idx]
+        anchor = Image.open(anchor_tuple[0])
                     
         # Positive
         probaility = random.randint(1,100)
-        aug = 800+(idx*7)
-        if probaility>30:
-            if curr == "pre":
-                positive = Image.open(img_tuple_post[random.randint(aug,aug+6)][0])
-            else:
-                positive = Image.open(img_tuple_pre[random.randint(aug,aug+6)][0])
+        if probaility<101:
+            positve_tuple = dataset_post.imgs[idx]
         else:
-            if curr == "pre":
-                positive = Image.open(img_tuple_pre[random.randint(aug,aug+6)][0])
-            else:
-                positive = Image.open(img_tuple_post[random.randint(aug,aug+6)][0])
+            positive = dataset_pre.imgs[idx+1]
 
-        # Negative
-        while True:
-            i = random.randint(0,799)
-            if i != idx:
-                break
-        idx = i
-        probaility = random.randint(1,10)
-        if probaility>6:
-            if curr == "pre":
-                negative = Image.open(img_tuple_post[idx][0])
-            else:
-                negative = Image.open(img_tuple_pre[idx][0])
+        positive = Image.open(positve_tuple[0])
+
+        probaility = random.randint(1,100)
+        if probaility<60:
+            negative_tuple = dataset_pre.imgs[(idx+5)%number_of_images]
         else:
-            if curr == "pre":
-                negative = Image.open(img_tuple_pre[idx][0])
-            else:
-                negative = Image.open(img_tuple_post[idx][0])
+            negative_tuple = dataset_post.imgs[(idx+5)%number_of_images]
 
+        negative = Image.open(negative_tuple[0])
+        
         transform=transforms.Compose([transforms.ToTensor()])
 
         anchor = anchor.convert("L")

@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader,Dataset
 from torch import optim
 from tripletLoss import TripletLoss
-from siamese import SiameseNetwork
+from siamese_partial import SiameseNetwork
 from torch.autograd import Variable
 
 epoch_num = 1000
@@ -33,12 +33,10 @@ for epoch in range(0,epoch_num):
         loss_triplet = criterion(anchor_output, positive_output, negative_output)
         loss_triplet.backward()
         optimizer.step()
-        if i %10 == 0 :
+
+        if i%10 == 0:    
             print("Epoch number {}\n Current loss {}\n".format(epoch,loss_triplet.data[0]))
-            iteration_number +=10
-            counter.append(iteration_number)
-            loss_history.append(loss_triplet.data[0])
-            np.save("loss_history.npy",loss_history)
     
+    print("Saving model")
     torch.save(net, 'model.pt')
     print("-- Model Checkpoint saved ---")
