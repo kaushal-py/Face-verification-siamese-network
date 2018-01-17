@@ -7,6 +7,7 @@ import torchvision.datasets as dset
 import Augmentor
 from PIL import Image
 import torchvision.transforms as transforms
+from config import Config
 
 class EycDataset(Dataset):
     """
@@ -72,53 +73,51 @@ class EycDataset(Dataset):
     
     def __getitem__(self, idx):
         
-        pre = ".eycdata/train/pre"
-        post = ".eycdata/train/post"
-
-        curr = pre
+        curr = "pre"
+        if self.train == True:
+            dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
+            dataset_post = dset.ImageFolder(root=Config.training_dir_post)
+        else:
+            dataset_pre = dset.ImageFolder(root=Config.testing_dir_pre)
+            dataset_post = dset.ImageFolder(root=Config.testing_dir_post)
+        img_tuple_pre = dataset_pre.imgs
+        img_tuple_post = dataset_post.imgs
+        
         # Anchor
-        person = sorted(os.listdir(curr))[idx]
-        fol = curr+"/"+person
-
-        anchor = Image.open(os.path.join(fol, os.listdir(fol)[0]))
-            
+        img_tuple = dataset_pre.imgs
+        anchor = Image.open(img_tuple[idx][0])
+                    
         # Positive
         probaility = random.randint(1,100)
-        if probaility>80:
-            if curr == pre:
-                curr = post
+        aug = 800+(idx*7)
+        if probaility>30:
+            if curr == "pre":
+                positive = Image.open(img_tuple_post[random.randint(aug,aug+6)][0])
             else:
-                curr = pre
+                positive = Image.open(img_tuple_pre[random.randint(aug,aug+6)][0])
         else:
-            if curr == pre:
-                curr = pre
+            if curr == "pre":
+                positive = Image.open(img_tuple_pre[random.randint(aug,aug+6)][0])
             else:
-                curr = post
+                positive = Image.open(img_tuple_post[random.randint(aug,aug+6)][0])
 
-        pos_fol = curr+"/"+person
-
-        positive = random.choice(os.listdir(pos_fol))
-        positive =  Image.open(os.path.join(pos_fol,positive))
-        
         # Negative
+        while True:
+            i = random.randint(0,799)
+            if i != idx:
+                break
+        idx = i
         probaility = random.randint(1,10)
         if probaility>6:
-            if curr == pre:
-                curr = post
+            if curr == "pre":
+                negative = Image.open(img_tuple_post[idx][0])
             else:
-                curr = pre
+                negative = Image.open(img_tuple_pre[idx][0])
         else:
-            if curr == pre:
-                curr = pre
+            if curr == "pre":
+                negative = Image.open(img_tuple_pre[idx][0])
             else:
-                curr = post
-        fol = curr+"/"
-        while True:
-            neg_fol = random.choice(os.listdir(fol))
-            if neg_fol != pos_fol:
-                break
-        negative = random.choice(os.listdir(fol+neg_fol))
-        negative = Image.open(os.path.join(fol+neg_fol,negative))
+                negative = Image.open(img_tuple_post[idx][0])
 
         transform=transforms.Compose([transforms.ToTensor()])
 
