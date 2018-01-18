@@ -1,13 +1,11 @@
 import numpy as np
-from eycDataset import EycDataset
+from eycDatasetContrastive import EycDataset
 import torch
 from torch.utils.data import DataLoader,Dataset
 from torch import optim
-from tripletLoss import TripletLoss
-from siamese_partial import SiameseNetwork
+from contrastiveLoss import ContrastiveLoss
+from siameseContrastive import SiameseNetwork
 from torch.autograd import Variable
-
-print("modules loaded")
 
 epoch_num = 1000
 image_num = 800
@@ -23,21 +21,21 @@ train_dataloader = DataLoader(dataset,
                         shuffle=True,
                         num_workers=8,
                         batch_size=train_batch_size)
-criterion = TripletLoss()
+criterion = ContrastiveLoss()
 optimizer = optim.Adam(net.parameters(),lr = 0.0005 )
 
 for epoch in range(0,epoch_num):
     for i, data in enumerate(train_dataloader):
-        (anchor, positive, negative) = data
-        anchor, positive, negative = Variable(anchor).cuda(), Variable(positive).cuda() , Variable(negative).cuda()
-        (anchor_output, positive_output, negative_output)  = net(anchor, positive, negative)
+        (img0, img1, label) = data
+        img0, img1, label = Variable(img0).cuda(), Variable(img1).cuda(), Variable(label).cuda()
+        (img0_output, img1_output)  = net(img0, img1)
         optimizer.zero_grad()
-        loss_triplet = criterion(anchor_output, positive_output, negative_output)
-        loss_triplet.backward()
+        loss_contrastive = criterion(img0_output, img1_output, label)
+        loss_contrastive.backward()
         optimizer.step()
-        
+
         if i%10 == 0:    
-            print("Epoch number {}\n Current loss {}\n".format(epoch,loss_triplet.data[0]))
+            print("Epoch number {}\n Current loss {}\n".format(epoch,loss_contrastive.data[0]))
     
     print("Saving model")
     torch.save(net, 'model.pt')

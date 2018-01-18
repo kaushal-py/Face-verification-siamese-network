@@ -68,16 +68,15 @@ class EycDataset(Dataset):
         if self.train:
             self.augment_images(".eycdata/train/pre")
             self.augment_images(".eycdata/train/post")
-        
-        if self.train == True:
+
+        if self.train:
             self.dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
             self.dataset_post = dset.ImageFolder(root=Config.training_dir_post)
-            
         else:
             self.dataset_pre = dset.ImageFolder(root=Config.testing_dir_pre)
             self.dataset_post = dset.ImageFolder(root=Config.testing_dir_post)
 
-        self.number_of_images = len(self.dataset_pre)
+        self.number_of_images = len(self.dataset_pre.imgs)
 
     def __len__(self):
         return self.number_of_images
@@ -85,39 +84,34 @@ class EycDataset(Dataset):
     def __getitem__(self, idx):
         
         # Anchor
-        anchor_tuple = self.dataset_pre.imgs[idx]
-        anchor = Image.open(anchor_tuple[0])
+        img0_tuple = self.dataset_pre.imgs[idx]
                     
         # Positive
-        probaility = random.randint(1,100)
-        if probaility<101:
-            positve_tuple = self.dataset_post.imgs[idx]
+        label = random.randint(0, 1)
+        probability = random.randint(1, 100)
+        if label:
+            if probability < 80:
+                img1_tuple = self.dataset_post.imgs[idx]
+            else:
+                img1_tuple = self.dataset_pre.imgs[idx]
         else:
-            positive = self.dataset_pre.imgs[idx+1]
+            if probability<60:
+                img1_tuple = self.dataset_pre.imgs[(idx+5)%self.number_of_images]
+            else:
+                img1_tuple = self.dataset_post.imgs[(idx+5)%self.number_of_images]
 
-        positive = Image.open(positve_tuple[0])
-
-        probaility = random.randint(1,100)
-        if probaility<60:
-            negative_tuple = self.dataset_pre.imgs[(idx+5) % 
-            self.number_of_images]
-        else:
-            negative_tuple = self.dataset_post.imgs[(idx+5) %
-            self.number_of_images]
-
-        negative = Image.open(negative_tuple[0])
+        img0 = Image.open(img0_tuple[0])
+        img1 = Image.open(img1_tuple[0])
         
         transform=transforms.Compose([transforms.ToTensor()])
 
-        anchor = anchor.convert("L")
-        positive = positive.convert("L")
-        negative = negative.convert("L")
+        img0 = img0.convert("L")
+        img1 = img1.convert("L")
 
-        anchor = transform(anchor)
-        positive = transform(positive)
-        negative = transform(negative)
+        img0 = transform(img0)
+        img1 = transform(img1)
         
-        return anchor, positive, negative
+        return img0, img1, label
     
     def moveToFolder(self, src_folder, src_list, dest_folder):
         '''

@@ -6,6 +6,8 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from matplotlib import image as mpimg
 import torchvision.datasets as dset
+import torchvision.transforms as transforms
+from config import Config
 
 def fetch(i):
     cwd = os.getcwd()
@@ -65,41 +67,53 @@ def fetch(i):
 # n = Image.fromarray(negative, 'RGB')
 # n.show()
 
+if True:
+    dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
+    dataset_post = dset.ImageFolder(root=Config.training_dir_post)
+    number_of_images = len(dataset_pre)
+else:
+    dataset_pre = dset.ImageFolder(root=Config.testing_dir_pre)
+    dataset_post = dset.ImageFolder(root=Config.testing_dir_post)
+    number_of_images = len(dataset_pre)
+
 def getItem(idx):
-    # get pre and post data folders
-    pre_data = dset.ImageFolder(root=".eycdata/train/pre/augmented")
-    post_data = dset.ImageFolder(root=".eycdata/train/post/augmented")
-
-    # total number of images (classes * image_per_class)
-    noOfimages = len(pre_data)
-
-    # get the anchor image from the index
-    img_0 = pre_data.imgs[idx]
-    # print(img_0, noOfimages)
-
-    # If the second image is same or not
-    isSame = random.randint(0,1)
-    label = isSame # label = 1 (for same image)
-
-    if isSame:
-        # decide if second image should be pre or post
-        isPre = random.randint(0,1)
-        if isPre:
-            img_1 = pre_data.imgs[idx]
-        else:
-            img_1 = post_data.imgs[idx]
     
+    # Anchor
+    anchor_tuple = dataset_pre.imgs[idx]
+    anchor = Image.open(anchor_tuple[0])
+                
+    # Positive
+    probaility = random.randint(1,100)
+    if probaility<101:
+        positve_tuple = dataset_post.imgs[idx]
     else:
-        # decide if second image should be pre or post
-        isPre = random.randint(0,1)
-        if isPre:
-            img_1 = pre_data.imgs[(idx+5)%noOfimages]
-        else:
-            img_1 = post_data.imgs[(idx+5)%noOfimages] 
+        positive = dataset_pre.imgs[idx+1]
 
-    img_0 = Image.open(img_0[0])           
-    img_1 = Image.open(img_1[0])           
+    positive = Image.open(positve_tuple[0])
 
-    print(img_0, img_1, label)
+    probaility = random.randint(1,100)
+    if probaility<60:
+        negative_tuple = dataset_pre.imgs[(idx+5)%number_of_images]
+    else:
+        negative_tuple = dataset_post.imgs[(idx+5)%number_of_images]
 
-getItem(4)
+    negative = Image.open(negative_tuple[0])
+    
+    # transform=transforms.Compose([transforms.ToTensor()])
+
+    # anchor = anchor.convert("L")
+    # positive = positive.convert("L")
+    # negative = negative.convert("L")
+
+    # anchor = transform(anchor)
+    # positive = transform(positive)
+    # negative = transform(negative)
+    
+    return anchor, positive, negative
+
+import time
+start_time = time.time()
+print("started")
+for i in range(64):
+    getItem(i)
+print("--- %s seconds ---" % (time.time() - start_time))
