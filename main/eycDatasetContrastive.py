@@ -8,6 +8,8 @@ import Augmentor
 from PIL import Image
 import torchvision.transforms as transforms
 from config import Config
+import torch
+import numpy as np
 
 class EycDataset(Dataset):
     """
@@ -89,7 +91,7 @@ class EycDataset(Dataset):
         # Positive
         label = random.randint(0, 1)
         probability = random.randint(1, 100)
-        if label:
+        if label == 0:
             if probability < 80:
                 img1_tuple = self.dataset_post.imgs[idx]
             else:
@@ -111,7 +113,7 @@ class EycDataset(Dataset):
         img0 = transform(img0)
         img1 = transform(img1)
         
-        return img0, img1, label
+        return img0, img1, torch.from_numpy(np.array([int(label)],dtype=np.float32))
     
     def moveToFolder(self, src_folder, src_list, dest_folder):
         '''
