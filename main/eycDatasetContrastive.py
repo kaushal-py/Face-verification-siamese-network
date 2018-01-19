@@ -87,20 +87,28 @@ class EycDataset(Dataset):
         
         # Anchor
         img0_tuple = self.dataset_pre.imgs[idx]
-                    
+        
         # Positive
         label = random.randint(0, 1)
         probability = random.randint(1, 100)
         if label == 0:
-            if probability < 80:
-                img1_tuple = self.dataset_post.imgs[idx]
+            similar_idx = (idx//5 * 5) + random.randint(0, 4)
+            if  probability < 80:
+                img1_tuple = self.dataset_post.imgs[similar_idx]
             else:
-                img1_tuple = self.dataset_pre.imgs[idx]
+                img1_tuple = self.dataset_pre.imgs[similar_idx]
+            assert img1_tuple[1] == img0_tuple[1]
         else:
             if probability<60:
-                img1_tuple = self.dataset_pre.imgs[(idx+5)%self.number_of_images]
+                while True:
+                    img1_tuple = random.choice(self.dataset_pre.imgs)
+                    if img0_tuple[1] != img1_tuple[1]:
+                        break
             else:
-                img1_tuple = self.dataset_post.imgs[(idx+5)%self.number_of_images]
+                while True:
+                    img1_tuple = random.choice(self.dataset_post.imgs)
+                    if img0_tuple[1] != img1_tuple[1]:
+                        break
 
         img0 = Image.open(img0_tuple[0])
         img1 = Image.open(img1_tuple[0])
@@ -151,7 +159,7 @@ class EycDataset(Dataset):
             p.flip_left_right(probability=0.5)
             p.rotate(probability=0.7, max_left_rotation=5, max_right_rotation=5)
             p.zoom(probability=0.3, min_factor=1, max_factor=1.2)
-            p.sample(5000)
+            p.sample(000)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
 
