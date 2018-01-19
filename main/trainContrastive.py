@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader,Dataset
 from torch import optim
 from contrastiveLoss import ContrastiveLoss
-from siameseContrastive import SiameseNetwork
+from siamese_partial import SiameseNetwork
 from torch.autograd import Variable
 
 epoch_num = 1000

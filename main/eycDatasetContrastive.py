@@ -113,7 +113,10 @@ class EycDataset(Dataset):
         img0 = transform(img0)
         img1 = transform(img1)
         
-        return img0, img1, torch.from_numpy(np.array([int(label)],dtype=np.float32))
+        if self.train:
+            return img0, img1, torch.from_numpy(np.array([int(label)],dtype=np.float32))
+        else:
+            return img0, img1, label
     
     def moveToFolder(self, src_folder, src_list, dest_folder):
         '''
