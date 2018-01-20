@@ -92,7 +92,10 @@ class EycDataset(Dataset):
         label = random.randint(0, 1)
         probability = random.randint(1, 100)
         if label == 0:
-            similar_idx = (idx//5 * 5) + random.randint(0, 4)
+            if self.train:
+                similar_idx = (idx//5 * 5) + random.randint(0, 4)
+            else:
+                similar_idx = idx
             if  probability < 80:
                 img1_tuple = self.dataset_post.imgs[similar_idx]
             else:
