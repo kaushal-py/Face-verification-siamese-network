@@ -90,7 +90,11 @@ class EycDataset(Dataset):
         
         # Positive
         if self.train:
-            label = random.randint(0, 1)
+            label_probabilty = random.randint(0, 10)
+            if label_probabilty < 9:
+                label = 0
+            else:
+                label = 1
         else:
             label = 0
         probability = random.randint(1, 100)

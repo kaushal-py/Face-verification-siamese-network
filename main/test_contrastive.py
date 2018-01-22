@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from PIL import Image
 
 dataset = EycDataset()
-net = torch.load('model.pt').eval()
+net = torch.load('model_improved.pt').eval()
 
 dataloader = DataLoader(dataset,
                         shuffle=True,
@@ -27,6 +27,8 @@ for i in range(200):
     # print(img0)
     
     img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+
+    print(img0)
     (img0_output, img1_output)  = net(img0, img1)
 
     euclidean_distance = F.pairwise_distance(img0_output, img1_output)

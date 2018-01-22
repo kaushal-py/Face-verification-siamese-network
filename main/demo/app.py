@@ -11,11 +11,17 @@ train_dataloader = DataLoader(dataset,
                         num_workers=8,
                         batch_size=1)
 
+image_set = []
+
+dataiter = iter(train_dataloader)
+
+for i in range(10):
+    image_set.append(next(dataiter))
 
 @app.route('/')
 def homepage():
     
-    return render_template("main.html", images=train_dataloader[:5])
+    return render_template("main.html", images=image_set)
 
 if __name__ == "__main__":
     app.run()
