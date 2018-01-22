@@ -3,3 +3,4 @@
 .ipynb_checkpoints/
 main/models
 eycdata/
+__pycache__/
