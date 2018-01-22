@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+
+    {% for image in images %}
+    <div class="alert alert-primary" role="alert">
+        {{ image }}
+    </div>
+    {% endfor %}
+
+{% endblock %}
