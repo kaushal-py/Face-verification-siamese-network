@@ -77,7 +77,7 @@ else:
     number_of_images = len(dataset_pre)
 
 def getItem(idx):
-    
+
     # Anchor
     anchor_tuple = dataset_pre.imgs[idx]
     anchor = Image.open(anchor_tuple[0])
