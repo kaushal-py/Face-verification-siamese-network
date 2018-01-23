@@ -6,14 +6,17 @@ from PIL import Image
 import torchvision.transforms as transforms
 import torch
 from siameseContrastive import SiameseNetwork
+from appDataset import AppDataset
+from torch.utils.data import DataLoader,Dataset
+import numpy as np
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = os.path.basename('upload')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+pre_path = "static/upload/pre/temp"
+post_path = "static/upload/post/temp"
 
 # Load model
-net = torch.load('../model_improved.pt')
+net = torch.load('model.pt').eval()
 
 @app.route("/")
 def hello():
@@ -27,44 +30,41 @@ def upload_pre():
     post = request.files['post']
 
     # Store path and name for images
-    pref = os.path.join(app.config['UPLOAD_FOLDER'], "PRE.jpg")
-    postf = os.path.join(app.config['UPLOAD_FOLDER'], "POST.jpg")
+    pref = os.path.join(pre_path, "PRE.jpg")
+    postf = os.path.join(post_path, "POST.jpg")
     
     # Image save
     pre.save(pref)
     post.save(postf)
     
-    # Load and preprocess images
-    img0 = Image.open('upload/PRE.jpg')
-    img1 = Image.open('upload/POST.jpg')
+    im = Image.open(pref)
+    im = im.resize((50, 50), Image.NEAREST)
+    im.save(pref, "JPEG")
+    im = Image.open(postf)
+    im = im.resize((50, 50), Image.NEAREST)
+    im.save(postf, "JPEG")
 
-    print(img0)
+    # Load Images
+    dataset = AppDataset()
+    dataloader = DataLoader(dataset,
+                        shuffle=False,
+                        num_workers=4,
+                        batch_size=1)
 
-    img0 = img0.resize((50, 50), Image.NEAREST)
-    img1 = img1.resize((50, 50), Image.NEAREST)
+    data_iter = iter(dataloader)
+    (img0, img1) = next(data_iter)
 
-    print(img0)
-    
-    transform=transforms.Compose([transforms.ToTensor()])
-
-    img0 = img0.convert("L")
-    img1 = img1.convert("L")
-
-    img0 = transform(img0)
-    img1 = transform(img1)
 
     # Calculate distance
     img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
-    img0 = img0.unsqueeze(0)
-    print(img0)
+    # img0 = img0.unsqueeze(0)
     (img0_output, img1_output)  = net(img0, img1)
     
-    print("output")
     euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
     euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
 
-    return euclidean_distance
+    return str(euclidean_distance)
 
 if __name__ == "__main__":
     app.run()
