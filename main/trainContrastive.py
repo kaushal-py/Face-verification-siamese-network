@@ -1,10 +1,10 @@
 import numpy as np
-from eycDatasetContrastive import EycDataset
+from pretrainedEYC import EycDataset
 import torch
 from torch.utils.data import DataLoader,Dataset
 from torch import optim
 from contrastiveLoss import ContrastiveLoss
-from siameseContrastive import SiameseNetwork
+from pretrainedNetwork import SiameseNetwork
 from torch.autograd import Variable
 
 epoch_num = 1000
@@ -15,7 +15,7 @@ counter = []
 loss_history = []
 
 dataset = EycDataset(train=True)
-net = torch.load("model.pt")
+net = SiameseNetwork().cuda()
 
 train_dataloader = DataLoader(dataset,
                         shuffle=True,
