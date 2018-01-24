@@ -16,7 +16,7 @@ pre_path = "static/upload/pre/temp"
 post_path = "static/upload/post/temp"
 
 # Load model
-net = torch.load('model.pt').eval()
+net = torch.load('../models/model_improved.pt').eval()
 
 @app.route("/")
 def hello():

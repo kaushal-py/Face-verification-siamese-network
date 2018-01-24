@@ -20,7 +20,7 @@ def homepage():
 
     dataiter = iter(train_dataloader)
 
-    for i in range(10):
+    for i in range(6):
         image_set.append(next(dataiter))
     return render_template("main.html", images=image_set)
 
