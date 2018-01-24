@@ -17,7 +17,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data.tar.gz", train=False, train_size=800):
+    def __init__(self, train=False, train_size=800):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -26,25 +26,16 @@ class EycDataset(Dataset):
         """
 
         # Class states 
-        self.dataset_folder_name = '.eycdata'
+        self.dataset_folder_name = '225-images'
         self.train = train
         self.train_size = train_size
 
-        # Check if the path to tar file is vaild
-        if not os.path.isfile(zip_path):
-            print("EYC dataset zip file not found. Please check for the 'tar.gz' file.")
-            return
-        
         # Extract the tar file
-        if not os.path.isdir('.eycdata'):
-            print("Extracting data from zipped file ", zip_path, "..")
-            eyc_tar = tarfile.open(zip_path, "r:gz")
-            eyc_tar.extractall(self.dataset_folder_name)
-            print("Done extracting files to ", self.dataset_folder_name)
+        if not os.path.isdir('225-images/train'):
 
             # Get pre and post image files from the directory
-            data_pre = sorted(os.listdir(".eycdata/pre"))
-            data_post = sorted(os.listdir(".eycdata/post"))
+            data_pre = sorted(os.listdir("225-images/pre"))
+            data_post = sorted(os.listdir("225-images/post"))
 
             # Randomize the data
             data_pair = list(zip(data_pre, data_post))
@@ -59,24 +50,24 @@ class EycDataset(Dataset):
 
             print("Making training and test data..")
 
-            self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
-            self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
-            self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
-            self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
+            self.moveToFolder("225-images/pre", data_pre_train, "225-images/train/pre")
+            self.moveToFolder("225-images/pre", data_pre_test, "225-images/test/pre")
+            self.moveToFolder("225-images/post", data_post_train, "225-images/train/post")
+            self.moveToFolder("225-images/post", data_post_test, "225-images/test/post")
 
         else:
             print("Data folder already created.")
 
         if self.train:
-            self.augment_images(".eycdata/train/pre")
-            self.augment_images(".eycdata/train/post")
+            self.augment_images("225-images/train/pre")
+            self.augment_images("225-images/train/post")
 
         if self.train:
-            self.dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
-            self.dataset_post = dset.ImageFolder(root=Config.training_dir_post)
+            self.dataset_pre = dset.ImageFolder(root="225-images/train/pre/augmented")
+            self.dataset_post = dset.ImageFolder(root="225-images/train/post/augmented")
         else:
-            self.dataset_pre = dset.ImageFolder(root=Config.testing_dir_pre)
-            self.dataset_post = dset.ImageFolder(root=Config.testing_dir_post)
+            self.dataset_pre = dset.ImageFolder(root="225-images/test/post")
+            self.dataset_post = dset.ImageFolder(root="225-images/test/post")
 
         self.number_of_images = len(self.dataset_pre.imgs)
 
@@ -90,18 +81,14 @@ class EycDataset(Dataset):
         
         # Positive
         if self.train:
-            label_probabilty = random.randint(0, 10)
-            if label_probabilty < 9:
-                label = 0
-            else:
-                label = 1
+            label = random.randint(0, 1)
         else:
             label = 0
         probability = random.randint(1, 100)
         if label == 0:
             if self.train:
                 similar_idx = (idx//5 * 5) + random.randint(0, 4)
-                if  probability < 101:
+                if  probability < 80:
                     img1_tuple = self.dataset_post.imgs[similar_idx]
                 else:
                     img1_tuple = self.dataset_pre.imgs[similar_idx]
@@ -125,10 +112,15 @@ class EycDataset(Dataset):
         img0 = Image.open(img0_tuple[0])
         img1 = Image.open(img1_tuple[0])
         
-        transform=transforms.Compose([transforms.ToTensor()])
+        transform=transforms.Compose([
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
 
-        img0 = img0.convert("L")
-        img1 = img1.convert("L")
+
+        # img0 = img0.convert("L")
+        # img1 = img1.convert("L")
 
         img0 = transform(img0)
         img1 = transform(img1)
@@ -171,7 +163,7 @@ class EycDataset(Dataset):
             p.flip_left_right(probability=0.5)
             p.rotate(probability=0.7, max_left_rotation=5, max_right_rotation=5)
             p.zoom(probability=0.3, min_factor=1, max_factor=1.2)
-            p.sample(000)
+            p.sample(4000)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
 

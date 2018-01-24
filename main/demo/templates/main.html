@@ -1,10 +1,28 @@
 {% extends "base.html" %}
+
 {% block content %}
-
+<br>
+<div class="row container mx-auto">
     {% for image in images %}
-    <div class="alert alert-primary" role="alert">
-        {{ image }}
+    <div class="col-md-4 p-3">
+        <div class="card text-center">
+            <div class="card-header">
+              Image set {{loop.index}}
+            </div>
+            <div class="row card-body">
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="150" width="150" src="{{ image[0][0][0] }}">    
+                </div>
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="150" width="150" src="{{ image[1][0][0] }}">    
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+              Label = {{ image[2][0] }}
+            </div>
+        </div>
     </div>
+    <br>
     {% endfor %}
-
+</div>
 {% endblock %}

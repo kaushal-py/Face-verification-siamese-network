@@ -25,7 +25,7 @@ class EycDataset(Dataset):
         """
 
         # Class states 
-        self.dataset_folder_name = 'eycdata'
+        self.dataset_folder_name = 'static/eycdata'
 
         # Check if the path to tar file is vaild
         if not os.path.isfile(zip_path):
@@ -33,7 +33,7 @@ class EycDataset(Dataset):
             return
         
         # Extract the tar file
-        if not os.path.isdir('.eycdata'):
+        if not os.path.isdir('static/eycdata'):
             print("Extracting data from zipped file ", zip_path, "..")
             eyc_tar = tarfile.open(zip_path, "r:gz")
             eyc_tar.extractall(self.dataset_folder_name)
@@ -43,10 +43,11 @@ class EycDataset(Dataset):
             print("Data folder already created.")
 
     
-        self.dataset_pre = dset.ImageFolder(root="eycdata/pre")
-        self.dataset_post = dset.ImageFolder(root="eycdata/post")
+        self.dataset_pre = dset.ImageFolder(root="static/eycdata/pre")
+        self.dataset_post = dset.ImageFolder(root="static/eycdata/post")
 
         self.number_of_images = len(self.dataset_pre.imgs)
+        print(self.number_of_images)
 
     def __len__(self):
         return self.number_of_images

@@ -1,10 +1,10 @@
 import numpy as np
-from eycDatasetContrastive import EycDataset
+from pretrainedEYC import EycDataset
 import torch
 from torch.utils.data import DataLoader,Dataset
 from torch import optim
 from contrastiveLoss import ContrastiveLoss
-from siamese_partial import SiameseNetwork
+from pretrainedNetwork import SiameseNetwork
 from torch.autograd import Variable
 
 epoch_num = 1000
@@ -36,7 +36,10 @@ for epoch in range(0,epoch_num):
 
         if i%10 == 0:    
             print("Epoch number {}\n Current loss {}\n".format(epoch,loss_contrastive.data[0]))
-    
+            with open("loss_history-3_6.csv", 'a') as loss_history:
+                loss_history.write(str(epoch) +
+                ","+str(loss_contrastive.data[0])+"\n")
+
     print("Saving model")
     torch.save(net, 'model.pt')
     print("-- Model Checkpoint saved ---")
