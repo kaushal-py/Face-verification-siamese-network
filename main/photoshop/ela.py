@@ -2,7 +2,6 @@ from PIL import Image, ImageChops
 import numpy as np
 import cv2
 
-
 ORIG = 'post.jpg'
 #ORIG = 'post-original.jpg'
 
