@@ -90,13 +90,9 @@ class EycDataset(Dataset):
         
         # Positive
         if self.train:
-            label_probabilty = random.randint(0, 10)
-            if label_probabilty < 9:
-                label = 0
-            else:
-                label = 1
+            label = random.randint(0, 1)
         else:
-            label = 0
+            label = 1
         probability = random.randint(1, 100)
         if label == 0:
             if self.train:
@@ -111,7 +107,7 @@ class EycDataset(Dataset):
             
             assert img1_tuple[1] == img0_tuple[1]
         else:
-            if probability<60:
+            if probability<0:
                 while True:
                     img1_tuple = random.choice(self.dataset_pre.imgs)
                     if img0_tuple[1] != img1_tuple[1]:
@@ -134,7 +130,7 @@ class EycDataset(Dataset):
         img1 = transform(img1)
         
         if self.train:
-            return img0, img1, torch.from_numpy(np.array([int(label)],dtype=np.float32))
+            return img0, img1, label
         else:
             return img0, img1, label
     
@@ -171,7 +167,7 @@ class EycDataset(Dataset):
             p.flip_left_right(probability=0.5)
             p.rotate(probability=0.7, max_left_rotation=5, max_right_rotation=5)
             p.zoom(probability=0.3, min_factor=1, max_factor=1.2)
-            p.sample(000)
+            p.sample(4000)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
 

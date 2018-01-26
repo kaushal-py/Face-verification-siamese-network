@@ -8,8 +8,8 @@ from siamese import SiameseNetwork
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-dataset = EycDataset(train=True)
-net = torch.load('model1.pt')
+dataset = EycDataset()
+net = torch.load('model.pt')
 
 dataloader = DataLoader(dataset,
                         shuffle=False,
@@ -21,7 +21,7 @@ data_iter = iter(dataloader)
 count_same = 0
 count_diff = 0
 
-for i in range(1000):
+for i in range(200):
     
     anchor, positive, negative = next(data_iter)
 
@@ -34,11 +34,7 @@ for i in range(1000):
     same_distance = same_distance.data.cpu().numpy()[0][0]
     diff_distance = diff_distance.data.cpu().numpy()[0][0]
     
-    print(i)
-    with open("distances.csv", "a") as distancesFile:
-        distancesFile.write(str(same_distance) + ",0\n" 
-        + str(diff_distance) + ",1\n")
-
+    print(same_distance, diff_distance)
     # if same_distance > 10:
     #     count_same+=1
     # if diff_distance < 10:

@@ -86,25 +86,34 @@ class EycDataset(Dataset):
         
         # Anchor
         anchor_tuple = self.dataset_pre.imgs[idx]
-        anchor = Image.open(anchor_tuple[0])
-                    
+        
         # Positive
-        probaility = random.randint(1,100)
-        if probaility<101:
-            positve_tuple = self.dataset_post.imgs[idx]
+        probability = random.randint(0, 100)
+        if self.train:
+            similar_idx = (idx//5 * 5) + random.randint(0, 4)
+            if  probability < 101:
+                positive_tuple = self.dataset_post.imgs[similar_idx]
+            else:
+                positive_tuple = self.dataset_pre.imgs[similar_idx]
         else:
-            positive = self.dataset_pre.imgs[idx+1]
+            similar_idx = idx
+            positive_tuple = self.dataset_post.imgs[similar_idx]
+        
+        assert anchor_tuple[1] == positive_tuple[1]
 
-        positive = Image.open(positve_tuple[0])
-
-        probaility = random.randint(1,100)
-        if probaility<60:
-            negative_tuple = self.dataset_pre.imgs[(idx+5) % 
-            self.number_of_images]
+        if probability<0:
+            while True:
+                negative_tuple = random.choice(self.dataset_pre.imgs)
+                if negative_tuple[1] != anchor_tuple[1]:
+                    break
         else:
-            negative_tuple = self.dataset_post.imgs[(idx+5) %
-            self.number_of_images]
+            while True:
+                negative_tuple = random.choice(self.dataset_post.imgs)
+                if anchor_tuple[1] != negative_tuple[1]:
+                    break
 
+        anchor = Image.open(anchor_tuple[0])
+        positive = Image.open(positive_tuple[0])
         negative = Image.open(negative_tuple[0])
         
         transform=transforms.Compose([transforms.ToTensor()])

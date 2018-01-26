@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader,Dataset
 from torch import optim
 from tripletLoss import TripletLoss
-from siamese_partial import SiameseNetwork
+from siamese import SiameseNetwork
 from torch.autograd import Variable
 
 print("modules loaded")
@@ -23,7 +23,7 @@ train_dataloader = DataLoader(dataset,
                         shuffle=True,
                         num_workers=8,
                         batch_size=train_batch_size)
-criterion = TripletLoss()
+criterion = torch.nn.TripletMarginLoss(margin=1.0, p=2)
 optimizer = optim.Adam(net.parameters(),lr = 0.0005 )
 
 for epoch in range(0,epoch_num):

@@ -8,50 +8,62 @@ from siameseContrastive import SiameseNetwork
 from torch.autograd import Variable
 import torch.nn.functional as F
 from PIL import Image
+import time
 
 dataset = EycDataset()
-net = torch.load('model_improved.pt').eval()
+net = torch.load('model.pt').eval()
 
 dataloader = DataLoader(dataset,
                         shuffle=True,
                         num_workers=8,
                         batch_size=1)
 
-data_iter = iter(dataloader)
+sum = 0
+for k in range(10):
+    data_iter = iter(dataloader)
+    count = 0
 
-count = 0
+    for i in range(200):
+        
+        (img0, img1, label) = next(data_iter)
+        # print(img0)
+        
+        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
 
-for i in range(200):
-    
-    (img0, img1, label) = next(data_iter)
-    # print(img0)
-    
-    img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # print(img0)
+        output  = net(img0, img1)
+        output = output.data.cpu().numpy()[0]
 
-    print(img0)
-    (img0_output, img1_output)  = net(img0, img1)
+        if (output[0] > 0.5 and label[0] == 0) or (output[1] > 0.5 and label[0] == 1):
+            count += 1
+        # print(output.data.cpu().numpy()[0], label[0])
 
-    euclidean_distance = F.pairwise_distance(img0_output, img1_output)
+        # euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
-    euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+        # euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
 
-    label = label.cpu().numpy()[0]
-    
-    print(euclidean_distance, label)
+        # label = label.cpu().numpy()[0]
+        
+        # print(euclidean_distance, label)
 
-    if (euclidean_distance < 1 and label == 1) or (euclidean_distance > 1 and label == 0):
-        count += 1
-    
-    # print(count)
-    # with open("distances.csv", "a") as distancesFile:
-    #     distancesFile.write(str(same_distance) + ",0\n" 
-    #     + str(diff_distance) + ",1\n")
+        # time.sleep(0.2)
 
-    # if same_distance > 10:
-    #     count_same+=1
-    # if diff_distance < 10:
-    #     count_diff+=1
-    
-    # print(count_same, " - ", count_diff)
+        # if (euclidean_distance < 1 and label == 1) or (euclidean_distance > 1 and label == 0):
+        #     count += 1
+        
+        # print(count)
+        # with open("distances.csv", "a") as distancesFile:
+        #     distancesFile.write(str(same_distance) + ",0\n" 
+        #     + str(diff_distance) + ",1\n")
 
-print(count)
+        # if same_distance > 10:
+        #     count_same+=1
+        # if diff_distance < 10:
+        #     count_diff+=1
+        
+        # print(count_same, " - ", count_diff)
+
+    print(count)
+    sum += count
+
+print("Accuracy :", sum/20, "%")

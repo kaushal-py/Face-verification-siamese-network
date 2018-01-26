@@ -31,13 +31,13 @@ class SiameseNetwork(nn.Module):
         )
 
         self.fc1 = nn.Sequential(
-            nn.Linear(16*50*50, 500),
+            nn.Linear(16*50*50, 512),
             nn.ReLU(inplace=True),
 
-            nn.Linear(500, 500),
+            nn.Linear(512, 512),
             nn.ReLU(inplace=True),
 
-            nn.Linear(500, 128))
+            nn.Linear(512, 256))
 
     def forward_once(self, x):
         output = self.cnn1(x)
