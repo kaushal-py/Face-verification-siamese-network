@@ -1,4 +1,5 @@
 from torch import nn
+import torch.nn.functional as F
 
 class SiameseNetwork(nn.Module):
     def __init__(self):
@@ -43,6 +44,7 @@ class SiameseNetwork(nn.Module):
         output = self.cnn1(x)
         output = output.view(output.size()[0], -1)
         output = self.fc1(output)
+        output = F.normalize(output)
         return output
 
     def forward(self, anchor_input, pos_input, neg_input):

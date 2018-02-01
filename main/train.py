@@ -17,17 +17,19 @@ counter = []
 loss_history = []
 
 dataset = EycDataset(train=True)
-net = SiameseNetwork().cuda()
+# net = SiameseNetwork().cuda()
+net = torch.load('model_triplet.pt')
 
 train_dataloader = DataLoader(dataset,
                         shuffle=True,
                         num_workers=8,
                         batch_size=train_batch_size)
-criterion = torch.nn.TripletMarginLoss(margin=1.0, p=2)
+criterion = TripletLoss()
 optimizer = optim.Adam(net.parameters(),lr = 0.0005 )
 
 for epoch in range(0,epoch_num):
     for i, data in enumerate(train_dataloader):
+        # print(data)
         (anchor, positive, negative) = data
         anchor, positive, negative = Variable(anchor).cuda(), Variable(positive).cuda() , Variable(negative).cuda()
         (anchor_output, positive_output, negative_output)  = net(anchor, positive, negative)
@@ -40,5 +42,5 @@ for epoch in range(0,epoch_num):
             print("Epoch number {}\n Current loss {}\n".format(epoch,loss_triplet.data[0]))
     
     print("Saving model")
-    torch.save(net, 'model.pt')
+    torch.save(net, 'model_triplet.pt')
     print("-- Model Checkpoint saved ---")

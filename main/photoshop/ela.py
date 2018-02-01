@@ -2,7 +2,7 @@ from PIL import Image, ImageChops
 import numpy as np
 import cv2
 
-ORIG = 'post.jpg'
+ORIG = 'downloaded.jpg'
 #ORIG = 'post-original.jpg'
 
 TEMP = 'demo_new_ela.jpg'

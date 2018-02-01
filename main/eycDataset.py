@@ -91,7 +91,7 @@ class EycDataset(Dataset):
         probability = random.randint(0, 100)
         if self.train:
             similar_idx = (idx//5 * 5) + random.randint(0, 4)
-            if  probability < 101:
+            if  probability < 0:
                 positive_tuple = self.dataset_post.imgs[similar_idx]
             else:
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
@@ -101,7 +101,7 @@ class EycDataset(Dataset):
         
         assert anchor_tuple[1] == positive_tuple[1]
 
-        if probability<0:
+        if probability < 0:
             while True:
                 negative_tuple = random.choice(self.dataset_pre.imgs)
                 if negative_tuple[1] != anchor_tuple[1]:

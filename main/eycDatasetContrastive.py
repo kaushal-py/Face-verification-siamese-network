@@ -107,7 +107,7 @@ class EycDataset(Dataset):
             
             assert img1_tuple[1] == img0_tuple[1]
         else:
-            if probability<0:
+            if probability < 0:
                 while True:
                     img1_tuple = random.choice(self.dataset_pre.imgs)
                     if img0_tuple[1] != img1_tuple[1]:
@@ -130,7 +130,7 @@ class EycDataset(Dataset):
         img1 = transform(img1)
         
         if self.train:
-            return img0, img1, label
+            return img0, img1, torch.from_numpy(np.array([int(label)],dtype=np.float32))
         else:
             return img0, img1, label
     

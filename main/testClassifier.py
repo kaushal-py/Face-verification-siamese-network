@@ -10,8 +10,8 @@ import torch.nn.functional as F
 from PIL import Image
 import time
 
-dataset = EycDataset()
-net = torch.load('model_contrastive_4.pt').eval()
+dataset = EycDataset(train=True)
+net = torch.load('model_more.pt').eval()
 
 dataloader = DataLoader(dataset,
                         shuffle=True,
@@ -23,7 +23,7 @@ for k in range(2):
     data_iter = iter(dataloader)
     count = 0
 
-    for i in range(200):
+    for i in range(4000):
         
         (img0, img1, label) = next(data_iter)
         # print(img0)
@@ -31,25 +31,25 @@ for k in range(2):
         img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
 
         # print(img0)
-        img0_output, img1_output  = net(img0, img1)
-        # output = output.data.cpu().numpy()[0]
+        output  = net(img0, img1)
+        output = output.data.cpu().numpy()[0]
 
-        # if (output[0] > 0.5 and label[0] == 0) or (output[1] > 0.5 and label[0] == 1):
-        #     count += 1
+        if (output[0] > 0.5 and label[0] == 0) or (output[1] > 0.5 and label[0] == 1):
+            count += 1
         # print(output.data.cpu().numpy()[0], label[0])
 
-        euclidean_distance = F.pairwise_distance(img0_output, img1_output)
+        # euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
-        euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+        # euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
 
-        label = label.cpu().numpy()[0]
+        # label = label.cpu().numpy()[0]
         
-        print(euclidean_distance, label)
+        # print(euclidean_distance, label)
 
         # time.sleep(0.2)
 
-        if (euclidean_distance < 1 and label == 1) or (euclidean_distance > 1 and label == 0):
-            count += 1
+        # if (euclidean_distance < 1 and label == 1) or (euclidean_distance > 1 and label == 0):
+        #     count += 1
         
         # print(count)
         # with open("distances.csv", "a") as distancesFile:
@@ -66,4 +66,4 @@ for k in range(2):
     print(count)
     sum += count
 
-print("Accuracy :", sum/40, "%")
+print("Accuracy :", sum/80, "%")
