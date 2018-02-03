@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 epoch_num = 400
 image_num = 800
-train_batch_size = 64
+train_batch_size = 100
 iteration_number = 0
 counter = []
 loss_history = []
@@ -17,8 +17,8 @@ loss_history = []
 dataset = EycDataset(train=True)
 
 print("Loading model...")
-# net = SiameseNetwork().cuda()   
-net = torch.load('model_contrastive_4.pt')
+net = SiameseNetwork().cuda()   
+# net = torch.load('model_duplicate_pre.pt')
 print("Model loaded")
 
 train_dataloader = DataLoader(dataset,
@@ -42,10 +42,10 @@ for epoch in range(0,epoch_num):
         if i%10 == 0:
             # print(label)
             print("Epoch number {}\n Current loss {}\n".format(epoch,loss.data[0]))
-            with open("loss_history-11.csv", 'a') as loss_history:
+            with open("loss_history-13.csv", 'a') as loss_history:
                 loss_history.write(str(epoch) +
                 ","+str(loss.data[0])+"\n")
 
     print("Saving model")
-    torch.save(net, 'model_contrastive_4.pt')
+    torch.save(net, 'model_pre_post.pt')
     print("-- Model Checkpoint saved ---")

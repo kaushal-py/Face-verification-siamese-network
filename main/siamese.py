@@ -18,27 +18,27 @@ class SiameseNetwork(nn.Module):
             nn.Dropout2d(p=.2),
 
             nn.ReflectionPad2d(1),
-            nn.Conv2d(8, 16, kernel_size=3),
+            nn.Conv2d(8, 8, kernel_size=3),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(16),
+            nn.BatchNorm2d(8),
             nn.Dropout2d(p=.2),
             
-            nn.ReflectionPad2d(1),
-            nn.Conv2d(16, 16, kernel_size=3),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm2d(16),
-            nn.Dropout2d(p=.2),
+            # nn.ReflectionPad2d(1),
+            # nn.Conv2d(16, 16, kernel_size=3),
+            # nn.ReLU(inplace=True),
+            # nn.BatchNorm2d(16),
+            # nn.Dropout2d(p=.2),
 
         )
 
         self.fc1 = nn.Sequential(
-            nn.Linear(16*50*50, 512),
+            nn.Linear(8*100*100, 256),
             nn.ReLU(inplace=True),
 
-            nn.Linear(512, 512),
-            nn.ReLU(inplace=True),
+            # nn.Linear(512, 512),
+            # nn.ReLU(inplace=True),
 
-            nn.Linear(512, 256))
+            nn.Linear(256, 128))
 
     def forward_once(self, x):
         output = self.cnn1(x)

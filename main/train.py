@@ -16,31 +16,45 @@ iteration_number = 0
 counter = []
 loss_history = []
 
-dataset = EycDataset(train=True)
-# net = SiameseNetwork().cuda()
-net = torch.load('model_triplet.pt')
+def main():
+    dataset = EycDataset(train=True)
+    net = SiameseNetwork().cuda()
+    print("model loaded")
+    # net = torch.load('models/model_triplet.pt')
 
-train_dataloader = DataLoader(dataset,
-                        shuffle=True,
-                        num_workers=8,
-                        batch_size=train_batch_size)
-criterion = TripletLoss()
-optimizer = optim.Adam(net.parameters(),lr = 0.0005 )
+    train_dataloader = DataLoader(dataset,
+                            shuffle=True,
+                            num_workers=8,
+                            batch_size=train_batch_size)
+    criterion = TripletLoss()
+    optimizer = optim.Adam(net.parameters(),lr = 0.0005 )
 
-for epoch in range(0,epoch_num):
-    for i, data in enumerate(train_dataloader):
-        # print(data)
-        (anchor, positive, negative) = data
-        anchor, positive, negative = Variable(anchor).cuda(), Variable(positive).cuda() , Variable(negative).cuda()
-        (anchor_output, positive_output, negative_output)  = net(anchor, positive, negative)
-        optimizer.zero_grad()
-        loss_triplet = criterion(anchor_output, positive_output, negative_output)
-        loss_triplet.backward()
-        optimizer.step()
+    for epoch in range(0,epoch_num):
+        for i, data in enumerate(train_dataloader):
+            # print(data)
+            (anchor, positive, negative) = data
+            anchor, positive, negative = Variable(anchor).cuda(), Variable(positive).cuda() , Variable(negative).cuda()
+            (anchor_output, positive_output, negative_output)  = net(anchor, positive, negative)
+            optimizer.zero_grad()
+            loss_triplet = criterion(anchor_output, positive_output, negative_output)
+            loss_triplet.backward()
+            optimizer.step()
+            
+            if i%10 == 0:
+                print("Epoch number {}\n Current loss {}\n".format(epoch,loss_triplet.data[0]))
         
-        if i%10 == 0:    
-            print("Epoch number {}\n Current loss {}\n".format(epoch,loss_triplet.data[0]))
-    
-    print("Saving model")
-    torch.save(net, 'model_triplet.pt')
-    print("-- Model Checkpoint saved ---")
+        print("Saving model")
+        torch.save(net, 'models/model_triplet_4.pt')
+        print("-- Model Checkpoint saved ---")
+
+def batches():
+    dataset = EycDataset(train=True)    
+    train_dataloader = DataLoader(dataset,
+                            shuffle=True,
+                            num_workers=8,
+                            batch_size=train_batch_size)
+
+    for epoch in range(0,epoch_num):
+        for i, data in enumerate(train_dataloader):
+            print(data.numpy())
+        

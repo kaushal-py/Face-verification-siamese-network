@@ -11,10 +11,10 @@ from PIL import Image
 import time
 
 dataset = EycDataset()
-net = torch.load('model_contrastive_4.pt').eval()
+net = torch.load('model_pre_post.pt').eval()
 
 dataloader = DataLoader(dataset,
-                        shuffle=True,
+                        shuffle=False,
                         num_workers=8,
                         batch_size=1)
 
@@ -22,13 +22,17 @@ sum = 0
 for k in range(2):
     data_iter = iter(dataloader)
     count = 0
-
-    for i in range(200):
+    # count_same = 0
+    # (img0, _, _) = next(data_iter)
+    # img0 = Variable(img0).cuda()
+        
+    for i in range(800):
         
         (img0, img1, label) = next(data_iter)
         # print(img0)
         
         img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img1 = Variable(img1).cuda()
 
         # print(img0)
         img0_output, img1_output  = net(img0, img1)
@@ -48,10 +52,11 @@ for k in range(2):
 
         # time.sleep(0.2)
 
-        if (euclidean_distance < 1 and label == 1) or (euclidean_distance > 1 and label == 0):
+        if (euclidean_distance < 0.5 and label == 1) or (euclidean_distance > 0.5 and label == 0):
             count += 1
+            # print(count)
         
-        # print(count)
+        # if (euclidean_distance < 0.5)
         # with open("distances.csv", "a") as distancesFile:
         #     distancesFile.write(str(same_distance) + ",0\n" 
         #     + str(diff_distance) + ",1\n")
@@ -66,4 +71,4 @@ for k in range(2):
     print(count)
     sum += count
 
-print("Accuracy :", sum/40, "%")
+print("Accuracy :", (1600-sum)/16, "%")

@@ -15,7 +15,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data.tar.gz", train=False, train_size=800):
+    def __init__(self, zip_path="eycdata.tar.gz", train=False, train_size=500):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -85,15 +85,16 @@ class EycDataset(Dataset):
     def __getitem__(self, idx):
         
         # Anchor
-        anchor_tuple = self.dataset_pre.imgs[idx]
         
         # Positive
         probability = random.randint(0, 100)
         if self.train:
-            similar_idx = (idx//5 * 5) + random.randint(0, 4)
-            if  probability < 0:
+            similar_idx = (idx//20 * 20) + random.randint(0, 19)
+            if  probability < 50:
+                anchor_tuple = self.dataset_post.imgs[idx]
                 positive_tuple = self.dataset_post.imgs[similar_idx]
             else:
+                anchor_tuple = self.dataset_pre.imgs[idx]
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
         else:
             similar_idx = idx
@@ -101,7 +102,7 @@ class EycDataset(Dataset):
         
         assert anchor_tuple[1] == positive_tuple[1]
 
-        if probability < 0:
+        if probability < 50:
             while True:
                 negative_tuple = random.choice(self.dataset_pre.imgs)
                 if negative_tuple[1] != anchor_tuple[1]:
@@ -159,8 +160,10 @@ class EycDataset(Dataset):
             print("== Augmenting images at", data_folder, " ==")
             p = Augmentor.Pipeline(data_folder, output_directory=dest_folder)
             p.flip_left_right(probability=0.5)
-            p.rotate(probability=0.7, max_left_rotation=5, max_right_rotation=5)
-            p.zoom(probability=0.3, min_factor=1, max_factor=1.2)
+            p.rotate(probability=0.7, max_left_rotation=15, max_right_rotation=15)
+            p.zoom(probability=0.3, min_factor=1, max_factor=1.3)
+            p.random_distortion(probability=0.3, grid_width=16, grid_height=16, magnitude=1)
+            p.resize(probability=1, height=100, width=100)
             p.sample(5000)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
