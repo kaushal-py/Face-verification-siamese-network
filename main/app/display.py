@@ -142,13 +142,9 @@ def upload():
     # Calculate distance
     img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
     # img0 = img0.unsqueeze(0)
-    (img0_output, img1_output)  = net(img0, img1)
+    output = net(img0, img1)
     
-    euclidean_distance = F.pairwise_distance(img0_output, img1_output)
-
-    euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
-
-    return str(euclidean_distance)
+    return str(output.data.cpu().numpy()[0][0])
 
 if __name__ == "__main__":
     app.run()

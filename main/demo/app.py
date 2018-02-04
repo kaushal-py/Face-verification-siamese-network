@@ -11,8 +11,6 @@ train_dataloader = DataLoader(dataset,
                         num_workers=8,
                         batch_size=1)
 
-
-
 @app.route('/')
 def homepage():
     
@@ -23,6 +21,10 @@ def homepage():
     for i in range(6):
         image_set.append(next(dataiter))
     return render_template("main.html", images=image_set)
+
+@app.route('/photoshop')
+def photoshoppage():
+    return render_template("photoshop.html")
 
 if __name__ == "__main__":
     app.run()

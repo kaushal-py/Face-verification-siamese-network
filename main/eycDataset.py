@@ -15,7 +15,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data.tar.gz", train=False, train_size=800):
+    def __init__(self, zip_path="eycdata.tar.gz", train=False, train_size=500):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -85,26 +85,36 @@ class EycDataset(Dataset):
     def __getitem__(self, idx):
         
         # Anchor
-        anchor_tuple = self.dataset_pre.imgs[idx]
-        anchor = Image.open(anchor_tuple[0])
-                    
+        
         # Positive
-        probaility = random.randint(1,100)
-        if probaility<101:
-            positve_tuple = self.dataset_post.imgs[idx]
+        probability = random.randint(0, 100)
+        if self.train:
+            similar_idx = (idx//20 * 20) + random.randint(0, 19)
+            if  probability < 50:
+                anchor_tuple = self.dataset_post.imgs[idx]
+                positive_tuple = self.dataset_post.imgs[similar_idx]
+            else:
+                anchor_tuple = self.dataset_pre.imgs[idx]
+                positive_tuple = self.dataset_pre.imgs[similar_idx]
         else:
-            positive = self.dataset_pre.imgs[idx+1]
+            similar_idx = idx
+            positive_tuple = self.dataset_post.imgs[similar_idx]
+        
+        assert anchor_tuple[1] == positive_tuple[1]
 
-        positive = Image.open(positve_tuple[0])
-
-        probaility = random.randint(1,100)
-        if probaility<60:
-            negative_tuple = self.dataset_pre.imgs[(idx+5) % 
-            self.number_of_images]
+        if probability < 50:
+            while True:
+                negative_tuple = random.choice(self.dataset_pre.imgs)
+                if negative_tuple[1] != anchor_tuple[1]:
+                    break
         else:
-            negative_tuple = self.dataset_post.imgs[(idx+5) %
-            self.number_of_images]
+            while True:
+                negative_tuple = random.choice(self.dataset_post.imgs)
+                if anchor_tuple[1] != negative_tuple[1]:
+                    break
 
+        anchor = Image.open(anchor_tuple[0])
+        positive = Image.open(positive_tuple[0])
         negative = Image.open(negative_tuple[0])
         
         transform=transforms.Compose([transforms.ToTensor()])
@@ -150,8 +160,10 @@ class EycDataset(Dataset):
             print("== Augmenting images at", data_folder, " ==")
             p = Augmentor.Pipeline(data_folder, output_directory=dest_folder)
             p.flip_left_right(probability=0.5)
-            p.rotate(probability=0.7, max_left_rotation=5, max_right_rotation=5)
-            p.zoom(probability=0.3, min_factor=1, max_factor=1.2)
+            p.rotate(probability=0.7, max_left_rotation=15, max_right_rotation=15)
+            p.zoom(probability=0.3, min_factor=1, max_factor=1.3)
+            p.random_distortion(probability=0.3, grid_width=16, grid_height=16, magnitude=1)
+            p.resize(probability=1, height=100, width=100)
             p.sample(5000)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
