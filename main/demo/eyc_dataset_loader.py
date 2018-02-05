@@ -16,7 +16,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data.tar.gz"):
+    def __init__(self, zip_path="eycdata.tar.gz"):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -80,6 +80,28 @@ class EycDataset(Dataset):
 
         
         return img0_tuple, img1_tuple, label
+    
+    def augment_images(self, data_folder, dest_folder="augmented"):
+        '''
+        If train cycle, augment the images.
+        Transformations done - 
+        1. Flip left-right (5o% probability)
+        2. Rotate (70% probability, angles -5 -> +5)
+        3. Zoom (30% probability, max_factor = 1.2)
+        '''
+
+        if not os.path.exists(os.path.join(data_folder, dest_folder)):
+            print("== Augmenting images at", data_folder, " ==")
+            p = Augmentor.Pipeline(data_folder, output_directory=dest_folder)
+            p.flip_left_right(probability=0.5)
+            p.rotate(probability=0.7, max_left_rotation=15, max_right_rotation=15)
+            p.zoom(probability=0.3, min_factor=1, max_factor=1.3)
+            p.random_distortion(probability=0.3, grid_width=4, grid_height=4, magnitude=1)
+            p.sample(10000)
+            # p.resize(probability=1, height=100, width=100)
+        else:
+            print("Augmented folder already exists at", data_folder + "/" + dest_folder)
+
     
     
 if __name__ == "__main__":

@@ -10,8 +10,8 @@ import torch.nn.functional as F
 from PIL import Image
 import time
 
-dataset = EycDataset(train=True)
-net = torch.load('model_more.pt').eval()
+dataset = EycDataset()
+net = torch.load('model_classifier.pt').eval()
 
 dataloader = DataLoader(dataset,
                         shuffle=True,
@@ -23,7 +23,7 @@ for k in range(2):
     data_iter = iter(dataloader)
     count = 0
 
-    for i in range(4000):
+    for i in range(800):
         
         (img0, img1, label) = next(data_iter)
         # print(img0)
@@ -66,4 +66,4 @@ for k in range(2):
     print(count)
     sum += count
 
-print("Accuracy :", sum/80, "%")
+print("Accuracy :", sum/16, "%")

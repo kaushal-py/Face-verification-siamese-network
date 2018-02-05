@@ -95,37 +95,43 @@ class EycDataset(Dataset):
             label = random.randint(0, 1)
             # label = 1
         else:
-            label = 0
+            label = 1
         probability = random.randint(1, 100)
-        if probability < 101:
-            img0_tuple = self.dataset_pre.imgs[idx]                        
-        else:
-            img0_tuple = self.dataset_post.imgs[idx]                        
+        # if probability < 101:
+        #     img0_tuple = self.dataset_pre.imgs[idx]                        
+        # else:
+        #     img0_tuple = self.dataset_post.imgs[idx]                        
         
         probability = random.randint(1, 100)
         if label == 0:
             if self.train:
                 similar_idx = (idx//20 * 20) + random.randint(0, 19)
                 if  probability < 50:
+                    img0_tuple = self.dataset_post.imgs[idx]                                            
                     img1_tuple = self.dataset_pre.imgs[similar_idx]
                 else:
+                    img0_tuple = self.dataset_pre.imgs[idx]                        
                     img1_tuple = self.dataset_post.imgs[similar_idx]
             else:
                 similar_idx = idx
-                if  probability < 0:
+                if  probability < 50:
+                    img0_tuple = self.dataset_post.imgs[idx]                                            
                     img1_tuple = self.dataset_pre.imgs[similar_idx]
                 else:
+                    img0_tuple = self.dataset_pre.imgs[idx]                        
                     img1_tuple = self.dataset_post.imgs[similar_idx]
             
             assert img1_tuple[1] == img0_tuple[1]
         else:
             if probability < 50:
                 while True:
+                    img0_tuple = self.dataset_post.imgs[idx]                                                                
                     img1_tuple = random.choice(self.dataset_pre.imgs)
                     if img0_tuple[1] != img1_tuple[1]:
                         break
             else:
                 while True:
+                    img0_tuple = self.dataset_pre.imgs[idx]                                            
                     img1_tuple = random.choice(self.dataset_post.imgs)
                     if img0_tuple[1] != img1_tuple[1]:
                         break
@@ -142,7 +148,8 @@ class EycDataset(Dataset):
         img1 = transform(img1)
         
         if self.train:
-            return img0, img1, torch.from_numpy(np.array([int(label)],dtype=np.float32))
+            # return img0, img1, torch.from_numpy(np.array([int(label)],dtype=np.float32))
+            return img0, img1, label
         else:
             return img0, img1, label
     

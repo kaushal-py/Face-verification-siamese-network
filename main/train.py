@@ -7,11 +7,9 @@ from tripletLoss import TripletLoss
 from siamese import SiameseNetwork
 from torch.autograd import Variable
 
-print("modules loaded")
-
 epoch_num = 1000
 image_num = 800
-train_batch_size = 64
+train_batch_size = 100
 iteration_number = 0
 counter = []
 loss_history = []
@@ -19,9 +17,9 @@ loss_history = []
 def main():
     dataset = EycDataset(train=True)
     net = SiameseNetwork().cuda()
+    # net = torch.load('models/model_triplet_5.pt')
     print("model loaded")
-    # net = torch.load('models/model_triplet.pt')
-
+    
     train_dataloader = DataLoader(dataset,
                             shuffle=True,
                             num_workers=8,
@@ -44,17 +42,19 @@ def main():
                 print("Epoch number {}\n Current loss {}\n".format(epoch,loss_triplet.data[0]))
         
         print("Saving model")
-        torch.save(net, 'models/model_triplet_4.pt')
+        torch.save(net, 'models/model_triplet_6.pt')
         print("-- Model Checkpoint saved ---")
 
 def batches():
     dataset = EycDataset(train=True)    
     train_dataloader = DataLoader(dataset,
                             shuffle=True,
-                            num_workers=8,
+                            num_workers=6,
                             batch_size=train_batch_size)
 
     for epoch in range(0,epoch_num):
         for i, data in enumerate(train_dataloader):
             print(data.numpy())
+
+main()
         

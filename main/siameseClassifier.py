@@ -24,19 +24,34 @@ class SiameseNetwork(nn.Module):
             nn.Dropout2d(p=.2),
 
             nn.ReflectionPad2d(1),
-            nn.Conv2d(16, 16, kernel_size=3),
+            nn.Conv2d(16, 32, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(32),
+            nn.Dropout2d(p=.2),
+
+        )
+
+        self.cnn2 = nn.Sequential(
+            nn.ReflectionPad2d(1),
+            nn.Conv2d(1, 4, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(4),
+            nn.Dropout2d(p=.2),
+            
+            nn.ReflectionPad2d(1),
+            nn.Conv2d(4, 8, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(8),
+            nn.Dropout2d(p=.2),
+
+            nn.ReflectionPad2d(1),
+            nn.Conv2d(8, 16, kernel_size=3),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(16),
             nn.Dropout2d(p=.2),
 
             nn.ReflectionPad2d(1),
             nn.Conv2d(16, 32, kernel_size=3),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm2d(32),
-            nn.Dropout2d(p=.2),
-
-            nn.ReflectionPad2d(1),
-            nn.Conv2d(32, 32, kernel_size=3),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(32),
             nn.Dropout2d(p=.2),
@@ -69,7 +84,7 @@ class SiameseNetwork(nn.Module):
         output0 = output0.view(output0.size()[0], -1)
         output0 = self.fc(output0)
 
-        output1 = self.cnn1(img1)
+        output1 = self.cnn2(img1)
         output1 = output1.view(output1.size()[0], -1)
         output1 = self.fc(output1)
 
