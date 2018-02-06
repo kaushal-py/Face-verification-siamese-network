@@ -13,6 +13,7 @@ import numpy as np
 import zipfile
 import os
 import pandas as pd
+import shutil
 
 app = Flask(__name__)
 app.config['CACHE_TYPE'] = "null"
@@ -21,11 +22,12 @@ pre_path = "static/upload/pre/temp"
 post_path = "static/upload/post/temp"
 
 # Load model
-net = torch.load('model.pt', map_location = lambda storage, loc:storage).eval()
-# net = net.cpu().double().eval()
-net = torch.load('model_duplicate_pre.pt')
-net_pre = torch.load('model_duplicate_pre.pt')
-net_post = torch.load('model_duplicate_post.pt')
+# net = torch.load('model.pt', map_location = lambda storage, loc:storage).eval()
+net_pre = torch.load('model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
+net_post = torch.load('model_duplicate_post.pt', map_location = lambda storage, loc:storage).eval()
+net = torch.load('model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
+# net_pre = torch.load('model_duplicate_pre.pt')
+# net_post = torch.load('model_duplicate_post.pt')
 
 @app.route("/")
 def display():
@@ -114,8 +116,8 @@ def upload_directory():
                         batch_size=1)
 
     # Read csv here
-    df_pre = pd.read_csv("static/pre_values.csv")
-    df_post = pd.read_csv("static/post_values.csv")
+    df_pre = pd.read_csv("static/pre_values.csv",delimiter=';')
+    df_post = pd.read_csv("static/post_values.csv",delimiter=';')
     pre_match_img = []
     pre_match_dist = []
     pre_match_old = []
@@ -124,27 +126,25 @@ def upload_directory():
     post_match_old = []
     
     for x in range(len(listpre)):
-        os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"/images/pre/"+listpre[x])
-        os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"/images/post/"+listpost[x])
-
-        os.remove(dirpre + "/" + str(x))
-        os.remove(dirpost + "/" + str(x))
 
         data_iter_pre = iter(dataloader_pre)
         (img0, img1) = next(data_iter_pre)
 
         # Calculate distance
-        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        img0, img1 = Variable(img0), Variable(img1)
         (img0_output_pre, img1_output)  = net_pre(img0, img1)
-        for y in range(0,df_pre.count()[0]):
-            euclidean_distance = F.pairwise_distance(img0_output_pre, df_pre.iloc[y][1])
-            euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+        img0_output_pre = img0_output_pre.data.numpy()[0]
+        output_pre = img0_output_pre.tolist()
+        for y in range(0,df_pre.count()[0]-1):
+            # euclidean_distance = F.pairwise_distance(img0_output_pre, df_pre.iloc[y][1])
+            # euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
             if euclidean_distance < 1:
                 pre_match_dist.append(euclidean_distance)
                 pre_match_img.append("/images/pre/"+listpre[x])
                 pre_match_old.append(df_pre.iloc[y][0])
         csv_pre = open("static/pre_values.csv",'a')
-        csv_pre.write("images/pre/"+listpre[x]+","+img0_output_pre)
+        csv_pre.write("\nimages/pre/"+listpre[x]+";"+str(output_pre))
         csv_pre.close()
 
 
@@ -153,9 +153,12 @@ def upload_directory():
         (img0, img1) = next(data_iter_post)
 
         # Calculate distance
-        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        img0, img1 = Variable(img0), Variable(img1)
+        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         (img0_output_post, img1_output)  = net_post(img0, img1)
-        for y in range(0,df_post.count()[0]):
+        img0_output_post = img0_output_post.data.numpy()[0]
+        output_post = img0_output_post.tolist()
+        for y in range(0,df_post.count()[0]-1):
             euclidean_distance = F.pairwise_distance(img0_output_post, df_post.iloc[y][1])
             euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
             if euclidean_distance < 1:
@@ -163,7 +166,7 @@ def upload_directory():
                 post_match_img.append("/images/post/"+listpre[x])
                 post_match_old.append(df_post.iloc[y][0])
         csv_post = open("static/post_values.csv",'a')
-        csv_post.write("images/post/"+listpost[x]+","+img0_output_post)
+        csv_post.write("\nimages/post/"+listpost[x]+";"+str(output_post))
         csv_post.close()
 
 
@@ -183,10 +186,17 @@ def upload_directory():
 
         distances.append(euclidean_distance)
 
+    for x in range(0,len(listpre)):
+        os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
+        os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"static/images/post/"+listpost[x])
+
+        shutil.rmtree(dirpre + "/" + str(x))
+        shutil.rmtree(dirpost + "/" + str(x))
+
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
-    os.remove(dirpre)
-    os.remove(dirpost)
+    shutil.rmtree(dirpre)
+    shutil.rmtree(dirpost)
     return str(distances[0])
 
 @app.route("/upload", methods=['POST'])
