@@ -15,7 +15,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data_50.tar.gz", train=False, train_size=400):
+    def __init__(self, zip_path="eyc-data_50.tar.gz", train=False, train_size=600):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -168,7 +168,7 @@ class EycDataset(Dataset):
             p.rotate(probability=0.7, max_left_rotation=15, max_right_rotation=15)
             p.zoom(probability=0.3, min_factor=1, max_factor=1.3)
             p.random_distortion(probability=0.3, grid_width=4, grid_height=4, magnitude=1)
-            p.sample(8000)
+            p.sample(12000)
             # p.resize(probability=1, height=100, width=100)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
