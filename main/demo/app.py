@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from eyc_dataset_loader import EycDataset
 from torch.utils.data import DataLoader,Dataset
 import os
+import random
 
 app = Flask(__name__)
 
@@ -28,8 +29,13 @@ def photoshoppage():
 
 @app.route('/augmentation')
 def augmentpage():
+    class_set = sorted(os.listdir('static/eycdata/pre/augmented/'))
+    # print(img_set)
+    img_class = random.choice(class_set)
+    image_set = sorted(os.listdir('static/eycdata/pre/augmented/'+img_class))
 
-    return render_template("augment.html")
+    image_set = [ 'static/eycdata/pre/augmented/'+img_class+'/'+image for image in image_set]
+    return render_template("augment.html", images=image_set)
 
 if __name__ == "__main__":
     app.run()
