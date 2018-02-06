@@ -26,8 +26,8 @@ class AppDataset(Dataset):
         
         assert img1_tuple[1] == img0_tuple[1]
 
-        img0 = Image.open(img0_tuple[0])
-        img1 = Image.open(img1_tuple[0])
+        img0 = Image.open(img0_tuple[0]).resize((50,50),Image.NEAREST)
+        img1 = Image.open(img1_tuple[0]).resize((50,50),Image.NEAREST)
         
         transform=transforms.Compose([transforms.ToTensor()])
 

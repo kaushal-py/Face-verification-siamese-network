@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<br>
+<div class="row container mx-auto">
+    <div class="col-md-12 p-6">
+        <div class="card text-center">
+            <div class="card-header">
+              Pre-Post Comparison
+            </div>
+            <div class="row card-body">
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="250" width="250" src="../static/upload/pre/temp/PRE.jpg">    
+                </div>
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="250" width="250" src="../static/upload/post/temp/POST.jpg">    
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                Distance = {{distance}}
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <br><br>
+
+    {% if cnt_pre > 100 %}
+    <div class="col-md-12 p-6 t-4">
+        <div class="card text-center">
+            <div class="card-header">
+                Pre Photoshop Evaluation
+            </div>
+            <div class="row card-body">
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="250" width="250" src="../static/upload/pre/temp/PRE.jpg">    
+                </div>
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="250" width="250" src="../static/upload/pre/temp/PRE-ELA.jpg">    
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                Photoshopped
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if cnt_post > 100 %}
+    <div class="col-md-12 p-6 t-4">
+        <div class="card text-center">
+            <div class="card-header">
+                Post Photoshop Evaluation
+            </div>
+            <div class="row card-body">
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="250" width="250" src="../static/upload/post/temp/POST.jpg">    
+                </div>
+                <div class="col-sm text-center">
+                    <img class="img-fluid" height="250" width="250" src="../static/upload/post/temp/POST-ELA.jpg">    
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                Photoshopped
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="col-md-12 p-6 t-4">
+        <div class="card text-center">
+            <div class="card-footer text-muted">
+                <div class="row">
+                    <button type="button" class="btn btn-outline-danger d-inline-block col-md-6 .float-left">Reject</button>
+                    <button type="button" class="btn btn-outline-success p-3 d-inline-block col-md-6 .float-right">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+</div>
+
+
+{% endblock %}
