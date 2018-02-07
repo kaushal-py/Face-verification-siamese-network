@@ -5,3 +5,6 @@ main/models
 eycdata/
 __pycache__/
 225-images/
+main/app/model_duplicate_post\.pt
+
+main/app/model_duplicate_pre\.pt

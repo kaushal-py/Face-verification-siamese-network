@@ -23,7 +23,7 @@ class SiameseNetwork(nn.Module):
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(16),
             nn.Dropout2d(p=.2),
-
+            
             nn.ReflectionPad2d(1),
             nn.Conv2d(16, 32, kernel_size=3),
             nn.ReLU(inplace=True),
@@ -56,7 +56,7 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm2d(32),
             nn.Dropout2d(p=.2),
         )
-
+        
         self.fc = nn.Sequential(
             nn.Linear(32*50*50, 512),
             nn.ReLU(inplace=True),

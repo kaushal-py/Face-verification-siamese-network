@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 import os
 from torch.autograd import Variable
 import torch.nn.functional as F
-from PIL import Image
+from PIL import Image, ImageChops
 import torchvision.transforms as transforms
 import torch
 from siameseContrastive import SiameseNetwork
@@ -13,16 +13,21 @@ import numpy as np
 import zipfile
 import os
 import pandas as pd
+import shutil
 
 app = Flask(__name__)
+app.config['CACHE_TYPE'] = "null"
 
 pre_path = "static/upload/pre/temp"
 post_path = "static/upload/post/temp"
 
 # Load model
-net = torch.load('model_duplicate_pre.pt')
-net_pre = torch.load('model_duplicate_pre.pt')
-net_post = torch.load('model_duplicate_post.pt')
+# net = torch.load('model.pt', map_location = lambda storage, loc:storage).eval()
+net_pre = torch.load('model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
+net_post = torch.load('model_duplicate_post.pt', map_location = lambda storage, loc:storage).eval()
+net = torch.load('model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
+# net_pre = torch.load('model_duplicate_pre.pt')
+# net_post = torch.load('model_duplicate_post.pt')
 
 @app.route("/")
 def display():
@@ -70,8 +75,6 @@ def upload_directory():
     listpre = os.listdir(dirpre)
     listpost = os.listdir(dirpost)
 
-    distances = []
-
     for x in range (0,len(listpre)):
 
         # Create folder and move image to that folder
@@ -111,78 +114,96 @@ def upload_directory():
                         batch_size=1)
 
     # Read csv here
-    df_pre = pd.read_csv("static/pre_values.csv")
-    df_post = pd.read_csv("static/post_values.csv")
+    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
+    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
+
+    match_dist = []
+    match_pre = []
+    match_post = []
     pre_match_img = []
     pre_match_dist = []
     pre_match_old = []
     post_match_img = []
     post_match_dist = []
     post_match_old = []
-    
+
+    data_iter_pre = iter(dataloader_pre)
+    data_iter_post = iter(dataloader_post)
+    data_iter = iter(dataloader)
+
     for x in range(len(listpre)):
-        os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"/images/pre/"+listpre[x])
-        os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"/images/post/"+listpost[x])
 
-        os.remove(dirpre + "/" + str(x))
-        os.remove(dirpost + "/" + str(x))
-
-        data_iter_pre = iter(dataloader_pre)
         (img0, img1) = next(data_iter_pre)
 
         # Calculate distance
-        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        img0, img1 = Variable(img0), Variable(img1)
         (img0_output_pre, img1_output)  = net_pre(img0, img1)
-        for y in range(0,df_pre.count()[0]):
-            euclidean_distance = F.pairwise_distance(img0_output_pre, df_pre.iloc[y][1])
-            euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+        img0_output_pre = img0_output_pre.data.numpy()[0]
+        output_pre = str(img0_output_pre.tolist())[1:-1]
+        for y in range(0,df_pre.count()[0]-1):
+            get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
+            euclidean_distance = np.linalg.norm(img0_output_pre - get_val)
             if euclidean_distance < 1:
                 pre_match_dist.append(euclidean_distance)
                 pre_match_img.append("/images/pre/"+listpre[x])
                 pre_match_old.append(df_pre.iloc[y][0])
         csv_pre = open("static/pre_values.csv",'a')
-        csv_pre.write("images/pre/"+listpre[x]+","+img0_output_pre)
+        csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
         csv_pre.close()
 
 
-
-        data_iter_post = iter(dataloader_post)
         (img0, img1) = next(data_iter_post)
 
         # Calculate distance
-        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        img0, img1 = Variable(img0), Variable(img1)
+        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         (img0_output_post, img1_output)  = net_post(img0, img1)
-        for y in range(0,df_post.count()[0]):
-            euclidean_distance = F.pairwise_distance(img0_output_post, df_post.iloc[y][1])
-            euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+        img0_output_post = img0_output_post.data.numpy()[0]
+        output_post = str(img0_output_post.tolist())[1:-1]
+        for y in range(0,df_post.count()[0]-1):
+            get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
+            euclidean_distance = np.linalg.norm(img0_output_post - get_val)
+            # euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
             if euclidean_distance < 1:
                 post_match_dist.append(euclidean_distance)
-                post_match_img.append("/images/post/"+listpre[x])
+                post_match_img.append("/images/post/"+listpost[x])
                 post_match_old.append(df_post.iloc[y][0])
         csv_post = open("static/post_values.csv",'a')
-        csv_post.write("images/post/"+listpost[x]+","+img0_output_post)
+        csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
         csv_post.close()
 
 
-
-        data_iter = iter(dataloader)
         (img0, img1) = next(data_iter)
 
         # Calculate distance
-        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        img0, img1 = Variable(img0), Variable(img1)
+        # img0 = img0.unsqueeze(0)
         (img0_output, img1_output)  = net(img0, img1)
         
         euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
         euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
 
-        distances.append(euclidean_distance)
+        match_pre.append("/images/pre/"+listpre[x])
+        match_post.append("/images/post/"+listpost[x])
+        match_dist.append(euclidean_distance)
 
+    for x in range(0,len(listpre)):
+        os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
+        os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"static/images/post/"+listpost[x])
+
+        shutil.rmtree(dirpre + "/" + str(x))
+        shutil.rmtree(dirpost + "/" + str(x))
+
+    match = [match_pre, match_post, match_dist]
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
-    os.remove(dirpre)
-    os.remove(dirpost)
-    return str(distances[0])
+    shutil.rmtree(dirpre)
+    shutil.rmtree(dirpost)
+
+    return render_template("result-single.html", pre_match = pre_match, post_match = post_match, match = match)
 
 @app.route("/upload", methods=['POST'])
 def upload():
@@ -199,12 +220,8 @@ def upload():
     pre.save(pref)
     post.save(postf)
     
-    im = Image.open(pref)
-    im = im.resize((50, 50), Image.NEAREST)
-    im.save(pref, "JPEG")
-    im = Image.open(postf)
-    im = im.resize((50, 50), Image.NEAREST)
-    im.save(postf, "JPEG")
+    # Check if image is Photoshopped
+    cnt_post, cnt_pre = checkPhotoshop()
 
     # Load Images
     dataset = AppDataset()
@@ -218,11 +235,75 @@ def upload():
 
 
     # Calculate distance
-    img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+    # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+    img0, img1 = Variable(img0), Variable(img1)
     # img0 = img0.unsqueeze(0)
-    output = net(img0, img1)
+    (img0_output, img1_output)  = net(img0, img1)
+        
+    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
+    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
+
+    img1_output_post = img1_output.data.numpy()[0]
+    img0_output_pre = img0_output.data.numpy()[0]
+
+    for y in range(0,df_post.count()[0]-1):
+        get_val_pre = df_pre.iloc[y][1:129].as_matrix(columns=None)
+        get_val_post = df_post.iloc[y][1:129].as_matrix(columns=None)
+        euclidean_distance_pre = np.linalg.norm(img0_output_pre - get_val_pre)
+        euclidean_distance_post = np.linalg.norm(img1_output_post - get_val_post)
     
-    return str(output.data.cpu().numpy()[0][0])
+    euclidean_distance = F.pairwise_distance(img0_output, img1_output)
+
+    euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+
+    # distances.append(euclidean_distance)
+    print(euclidean_distance)
+
+    return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre, euclidean_distance_pre = euclidean_distance_pre, euclidean_distance_post = euclidean_distance_post)
+
+def checkPhotoshop():
+
+    ORIG_POST = os.path.join(post_path, "POST.jpg")
+    TEMP_POST = os.path.join(post_path, "POST-TEMP.jpg")
+    ORIG_PRE = os.path.join(pre_path, "PRE.jpg")
+    TEMP_PRE = os.path.join(pre_path, "PRE-TEMP.jpg")
+    SCALE = 15
+
+    original_post = Image.open(ORIG_POST)
+    original_post.save(TEMP_POST, quality=90)
+    temporary_post = Image.open(TEMP_POST)
+    original_pre = Image.open(ORIG_PRE)
+    original_pre.save(TEMP_PRE, quality=90)
+    temporary_pre = Image.open(TEMP_PRE)
+    
+    diff_post = ImageChops.difference(original_post, temporary_post)
+    d_post = diff_post.load()
+    WIDTH, HEIGHT = diff_post.size
+    for x in range(WIDTH):
+        for y in range(HEIGHT):
+            d_post[x, y] = tuple(k * SCALE for k in d_post[x, y])
+
+    diff_post.save(post_path+"/POST-ELA.jpg")
+
+    diff_pre = ImageChops.difference(original_pre, temporary_pre)
+    d_pre = diff_pre.load()
+    WIDTH, HEIGHT = diff_pre.size
+    for x in range(WIDTH):
+        for y in range(HEIGHT):
+            d_pre[x, y] = tuple(k * SCALE for k in d_pre[x, y])
+
+    diff_pre.save(pre_path+"/PRE-ELA.jpg")
+    
+    # Count the number of pixels in ELA image
+    img_ela_post = np.asarray(Image.open(post_path+"/POST-ELA.jpg"))
+    img_hist_post = np.histogram(img_ela_post.ravel(),256,[0,256])
+    cnt_post = np.count_nonzero(img_hist_post[0])
+
+    img_ela_pre = np.asarray(Image.open(pre_path+"/PRE-ELA.jpg"))
+    img_hist_pre = np.histogram(img_ela_pre.ravel(),256,[0,256])
+    cnt_pre = np.count_nonzero(img_hist_pre[0])
+    
+    return cnt_post, cnt_pre
 
 if __name__ == "__main__":
     app.run()
