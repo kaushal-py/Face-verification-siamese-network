@@ -197,7 +197,8 @@ def upload_directory():
     post_match = [post_match_dist,post_match_img,post_match_old]
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
-    return str(distances[0])
+    return render_template('result-directory.html')
+
 
 @app.route("/upload", methods=['POST'])
 def upload():

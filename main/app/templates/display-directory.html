@@ -1,83 +1,42 @@
-<html>
+{% extends "base.html" %}
 
-    <head>
-        <title>PDBEYC3</title>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-        <style>
-            .xbtn {
-                text-align: center;
-                background: #3498db;
-                background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
-                background-image: -moz-linear-gradient(top, #3498db, #2980b9);
-                background-image: -ms-linear-gradient(top, #3498db, #2980b9);
-                background-image: -o-linear-gradient(top, #3498db, #2980b9);
-                background-image: linear-gradient(to bottom, #3498db, #2980b9);
-                -webkit-border-radius: 1;
-                -moz-border-radius: 1;
-                border-radius: 1px;
-                font-family: Arial;
-                color: #ffffff;
-                font-size: 60px;
-                padding: 40px;
-                background: #aff000;
-                text-decoration: none;
-                box-shadow: none;
-                border: none;
-            }
-                
-            .xbtn:hover {
-                background: #9dd800;
-                text-decoration: none;
-            }
-            .label{
-                font-family: Exo;
-                color: #00cef6;
-                font-size: 30px;
-            }
-            .btn-grp{
-                padding: 10px;
-                text-align: center;
-            }
-            .imgsize{
-                width: 50%;
-                height: 40%;
-                padding: 25px;
-            }
-        </style>
-    </head>
-
-    <body>
-        <form action="/upload-directory" method="post" enctype="multipart/form-data">
-            <div class="btn-grp col-md-5 col-md-offset-1">
-                <div class="label">Pre Operation</div>
+{% block content %}
+<nav class="navbar navbar-inverse bg-inverse">
+    <a class="navbar-brand" href="#">PDBEYC3</a>
+    <a href="/"><button class="btn btn-primary my-2 my-sm-0 ml-12" type="submit">Upload Singular Images</button></a>
+</nav>
+<hr>
+<div class="container">
+    
+    <form>    
+        <div class="row">
+          <div class="col">
+                <div class="text-center"><h3>Pre Operation</h3></div>
                 <br>
                 <br>
                 <!-- <input type="file" name="pre" class="file col-md-offset-4 col-md-4" id="preop" value="+"/> -->
-                <img class="imgsize" id="preimg" src='/static/zip.jpeg' alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
+                <img class="mx-auto d-block" id="preimg" src='/static/zip.jpeg' alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
                 <div class="form-control" data-provides="fileinput">
                     <input type="file" name="pre-directory" id="getimgpre" />
                 </div>
-            </div>
-            <div class="btn-grp col-md-5">
-                <div class="label">Post Operation</div>
+          </div>
+          <div class="col">
+                <div class="text-center"><h3>Post Operation</h3></div>
                 <br>
                 <br>
                 <!-- <input type="file" name="post" class="file col-md-offset-4 col-md-4" id="postop" value="+"/> -->
-                <img class="imgsize" id="postimg" src='/static/zip.jpeg' alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
+                <img class="mx-auto d-block" id="postimg" src='/static/zip.jpeg' alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
                 <div class="form-control" data-provides="fileinput">
                     <input type="file" name="post-directory" />
                 </div>
+          </div>
+        </div>
+        <br><br>
+        <div class="row text-center">
+            <div class="col">
+                <input type="submit" value="Submit" id="postop" class="text-center btn btn-large btn-success btn-block"/>                
             </div>
-            <br>
-            <div class="col-md-offset-5">
-                <input type="submit" value="Submit" id="postop" class="col-md-4 btn btn-success"/>
-            </div>
-        </form>
-
-        <br>
-        <a href="/">upload single pre-post image pair</a>
-
-    </body>
-
-</html>
+        </div>
+    </form> 
+      </div>
+{% endblock %}
