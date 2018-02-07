@@ -75,8 +75,6 @@ def upload_directory():
     listpre = os.listdir(dirpre)
     listpost = os.listdir(dirpost)
 
-    distances = []
-
     for x in range (0,len(listpre)):
 
         # Create folder and move image to that folder
@@ -116,18 +114,25 @@ def upload_directory():
                         batch_size=1)
 
     # Read csv here
-    df_pre = pd.read_csv("static/pre_values.csv",delimiter=';')
-    df_post = pd.read_csv("static/post_values.csv",delimiter=';')
+    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
+    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
+
+    match_dist = []
+    match_pre = []
+    match_post = []
     pre_match_img = []
     pre_match_dist = []
     pre_match_old = []
     post_match_img = []
     post_match_dist = []
     post_match_old = []
-    
+
+    data_iter_pre = iter(dataloader_pre)
+    data_iter_post = iter(dataloader_post)
+    data_iter = iter(dataloader)
+
     for x in range(len(listpre)):
 
-        data_iter_pre = iter(dataloader_pre)
         (img0, img1) = next(data_iter_pre)
 
         # Calculate distance
@@ -135,21 +140,19 @@ def upload_directory():
         img0, img1 = Variable(img0), Variable(img1)
         (img0_output_pre, img1_output)  = net_pre(img0, img1)
         img0_output_pre = img0_output_pre.data.numpy()[0]
-        output_pre = img0_output_pre.tolist()
+        output_pre = str(img0_output_pre.tolist())[1:-1]
         for y in range(0,df_pre.count()[0]-1):
-            # euclidean_distance = F.pairwise_distance(img0_output_pre, df_pre.iloc[y][1])
-            # euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+            get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
+            euclidean_distance = np.linalg.norm(img0_output_pre - get_val)
             if euclidean_distance < 1:
                 pre_match_dist.append(euclidean_distance)
                 pre_match_img.append("/images/pre/"+listpre[x])
                 pre_match_old.append(df_pre.iloc[y][0])
         csv_pre = open("static/pre_values.csv",'a')
-        csv_pre.write("\nimages/pre/"+listpre[x]+";"+str(output_pre))
+        csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
         csv_pre.close()
 
 
-
-        data_iter_post = iter(dataloader_post)
         (img0, img1) = next(data_iter_post)
 
         # Calculate distance
@@ -157,21 +160,20 @@ def upload_directory():
         # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         (img0_output_post, img1_output)  = net_post(img0, img1)
         img0_output_post = img0_output_post.data.numpy()[0]
-        output_post = img0_output_post.tolist()
+        output_post = str(img0_output_post.tolist())[1:-1]
         for y in range(0,df_post.count()[0]-1):
-            euclidean_distance = F.pairwise_distance(img0_output_post, df_post.iloc[y][1])
-            euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
+            get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
+            euclidean_distance = np.linalg.norm(img0_output_post - get_val)
+            # euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
             if euclidean_distance < 1:
                 post_match_dist.append(euclidean_distance)
-                post_match_img.append("/images/post/"+listpre[x])
+                post_match_img.append("/images/post/"+listpost[x])
                 post_match_old.append(df_post.iloc[y][0])
         csv_post = open("static/post_values.csv",'a')
-        csv_post.write("\nimages/post/"+listpost[x]+";"+str(output_post))
+        csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
         csv_post.close()
 
 
-
-        data_iter = iter(dataloader)
         (img0, img1) = next(data_iter)
 
         # Calculate distance
@@ -184,7 +186,9 @@ def upload_directory():
 
         euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
 
-        distances.append(euclidean_distance)
+        match_pre.append("/images/pre/"+listpre[x])
+        match_post.append("/images/post/"+listpost[x])
+        match_dist.append(euclidean_distance)
 
     for x in range(0,len(listpre)):
         os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
@@ -193,12 +197,14 @@ def upload_directory():
         shutil.rmtree(dirpre + "/" + str(x))
         shutil.rmtree(dirpost + "/" + str(x))
 
+    match = [match_pre, match_post, match_dist]
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
     return render_template('result-directory.html')
 
+    return render_template("result-single.html", pre_match = pre_match, post_match = post_match, match = match)
 
 @app.route("/upload", methods=['POST'])
 def upload():
@@ -235,8 +241,17 @@ def upload():
     # img0 = img0.unsqueeze(0)
     (img0_output, img1_output)  = net(img0, img1)
         
-    # img0_output
-    # img1_output
+    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
+    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
+
+    img1_output_post = img1_output.data.numpy()[0]
+    img0_output_pre = img0_output.data.numpy()[0]
+
+    for y in range(0,df_post.count()[0]-1):
+        get_val_pre = df_pre.iloc[y][1:129].as_matrix(columns=None)
+        get_val_post = df_post.iloc[y][1:129].as_matrix(columns=None)
+        euclidean_distance_pre = np.linalg.norm(img0_output_pre - get_val_pre)
+        euclidean_distance_post = np.linalg.norm(img1_output_post - get_val_post)
     
     euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
@@ -245,7 +260,7 @@ def upload():
     # distances.append(euclidean_distance)
     print(euclidean_distance)
 
-    return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre)
+    return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre, euclidean_distance_pre = euclidean_distance_pre, euclidean_distance_post = euclidean_distance_post)
 
 def checkPhotoshop():
 

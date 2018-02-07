@@ -61,7 +61,7 @@ def main():
         # print("Epoch number {}\n Current loss {}\n".format(epoch,loss.data[0]))
 
         print("Saving model")
-        torch.save(net, 'models/model_triplet_8.pt')
+        torch.save(net, 'models/model_triplet_pr_pr3.pt')
         print("-- Model Checkpoint saved ---")
 
 # def batches():
