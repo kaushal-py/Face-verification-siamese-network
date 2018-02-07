@@ -15,7 +15,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data_50.tar.gz", train=False, train_size=600):
+    def __init__(self, zip_path="eyc-data_50.tar.gz", train=False, train_size=400):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -90,16 +90,16 @@ class EycDataset(Dataset):
         probability = random.randint(0, 100)
         if self.train:
             similar_idx = (idx//20 * 20) + random.randint(0, 19)
-            if  probability < 50:
-                anchor_tuple = self.dataset_post.imgs[idx]
+            if  probability < 101:
+                anchor_tuple = self.dataset_pre.imgs[idx]
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
             else:
                 anchor_tuple = self.dataset_pre.imgs[idx]
                 positive_tuple = self.dataset_post.imgs[similar_idx]
         else:
             similar_idx = idx
-            if  probability < 50:
-                anchor_tuple = self.dataset_post.imgs[idx]
+            if  probability < 101:
+                anchor_tuple = self.dataset_pre.imgs[idx]
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
             else:
                 anchor_tuple = self.dataset_pre.imgs[idx]
@@ -107,7 +107,7 @@ class EycDataset(Dataset):
         
         assert anchor_tuple[1] == positive_tuple[1]
 
-        if probability < 50:
+        if probability < 101:
             while True:
                 negative_tuple = random.choice(self.dataset_pre.imgs)
                 if negative_tuple[1] != anchor_tuple[1]:
@@ -124,9 +124,9 @@ class EycDataset(Dataset):
         
         transform=transforms.Compose([transforms.ToTensor()])
 
-        anchor = anchor.convert("L")
-        positive = positive.convert("L")
-        negative = negative.convert("L")
+        # anchor = anchor.convert("L")
+        # positive = positive.convert("L")
+        # negative = negative.convert("L")
 
         anchor = transform(anchor)
         positive = transform(positive)
@@ -168,7 +168,7 @@ class EycDataset(Dataset):
             p.rotate(probability=0.7, max_left_rotation=15, max_right_rotation=15)
             p.zoom(probability=0.3, min_factor=1, max_factor=1.3)
             p.random_distortion(probability=0.3, grid_width=4, grid_height=4, magnitude=1)
-            p.sample(12000)
+            p.sample(8000)
             # p.resize(probability=1, height=100, width=100)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)

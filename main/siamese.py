@@ -6,7 +6,7 @@ class SiameseNetwork(nn.Module):
         super(SiameseNetwork, self).__init__()
         self.cnn1 = nn.Sequential(
             nn.ReflectionPad2d(1),
-            nn.Conv2d(1, 4, kernel_size=3),
+            nn.Conv2d(3, 4, kernel_size=3),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(4),
             nn.Dropout2d(p=.2),
@@ -26,7 +26,7 @@ class SiameseNetwork(nn.Module):
 
         self.cnn2 = nn.Sequential(
             nn.ReflectionPad2d(1),
-            nn.Conv2d(1, 4, kernel_size=3),
+            nn.Conv2d(3, 4, kernel_size=3),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(4),
             nn.Dropout2d(p=.2),
@@ -46,7 +46,7 @@ class SiameseNetwork(nn.Module):
 
         self.cnn3 = nn.Sequential(
             nn.ReflectionPad2d(1),
-            nn.Conv2d(1, 4, kernel_size=3),
+            nn.Conv2d(3, 4, kernel_size=3),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(4),
             nn.Dropout2d(p=.2),
