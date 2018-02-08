@@ -195,6 +195,7 @@ def processing_folder():
     post_match = [post_match_dist,post_match_img,post_match_old]
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
+    return render_template('result-directory.html')
 
     return render_template("result-single.html", pre_match = pre_match, post_match = post_match, match = match)
 
