@@ -4,7 +4,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-<div class="text-center">
+<div class="text-left">
     {% for i in range(images) %}
     <div class="box box{{i}}">
         <img src="" alt="" class="img0" width="{{size}}px">
@@ -15,15 +15,18 @@
 
 <style>
     .box{
-        margin: 5px;
-        padding: 5px;
+        margin: 2px;
+        padding: 10px;
         display: inline-block
+    }
+    .bg-green{
+        background-color: lightgreen
     }
 </style>
 
 <script type="text/javascript">
 $(document).ready(function(){
-    var socket = io.connect('http://0.0.0.0:5000/');
+    var socket = io.connect('http://192.168.43.68:5000/');
 
     $i=0
     socket.on('pre', function(data){

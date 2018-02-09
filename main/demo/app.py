@@ -76,17 +76,17 @@ def pre_post_comparisons(wait_time):
         probability = random.randint(0, 1)
         if probability == 0:
             if same_distance < 0.5:
-                color = "success"      
+                color = "green"      
             else:
-                color = "warning"
+                color = "danger"
             socketio.emit('pre', {'color': color,
                                   'img0': anchor_tuple, 
                                   'img1': positive_tuple})
         else:
             if diff_distance > 0.5:
-                color = "warning"      
+                color = "danger"      
             else:
-                color = "success"
+                color = "green"
             socketio.emit('pre', {'color': color,
                                   'img0': anchor_tuple, 
                                   'img1': negative_tuple})  

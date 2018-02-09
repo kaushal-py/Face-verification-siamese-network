@@ -19,7 +19,7 @@
 
 <script type="text/javascript">
     $(document).ready(function(){
-        var socket = io.connect('http://0.0.0.0:5000/');
+        var socket = io.connect('http://192.168.43.68:5000/');
     
         socket.on('vector', function(data){
             $('img').attr('src', data.img);
