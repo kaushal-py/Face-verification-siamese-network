@@ -14,9 +14,12 @@ import zipfile
 import os
 import pandas as pd
 import shutil
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
 app.config['CACHE_TYPE'] = "null"
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
 pre_path = "static/upload/pre/temp"
 post_path = "static/upload/post/temp"
@@ -72,8 +75,8 @@ def upload_directory():
         if os.path.isdir('static/upload/dir/post/'+str(x)):
             dirpost='static/upload/dir/post/'+str(x)
     
-    listpre = os.listdir(dirpre)
-    listpost = os.listdir(dirpost)
+    listpre = sorted(os.listdir(dirpre))
+    listpost = sorted(os.listdir(dirpost))
 
     for x in range (0,len(listpre)):
 
@@ -144,7 +147,7 @@ def upload_directory():
         for y in range(0,df_pre.count()[0]-1):
             get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img0_output_pre - get_val)
-            if euclidean_distance < 1:
+            if euclidean_distance < 0.1:
                 pre_match_dist.append(euclidean_distance)
                 pre_match_img.append("/images/pre/"+listpre[x])
                 pre_match_old.append(df_pre.iloc[y][0])
@@ -165,7 +168,7 @@ def upload_directory():
             get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img0_output_post - get_val)
             # euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
-            if euclidean_distance < 1:
+            if euclidean_distance < 0.1:
                 post_match_dist.append(euclidean_distance)
                 post_match_img.append("/images/post/"+listpost[x])
                 post_match_old.append(df_post.iloc[y][0])
@@ -197,14 +200,16 @@ def upload_directory():
         shutil.rmtree(dirpre + "/" + str(x))
         shutil.rmtree(dirpost + "/" + str(x))
 
-    match = [match_pre, match_post, match_dist]
+    match = [match_dist, match_pre, match_post]
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
+    match_len = len(match[0])
+    pre_len = len(pre_match[0])
+    post_len = len(post_match[0])
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
-    return render_template('result-directory.html')
-
-    return render_template("result-single.html", pre_match = pre_match, post_match = post_match, match = match)
+    # return match
+    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len)
 
 @app.route("/upload", methods=['POST'])
 def upload():
@@ -262,6 +267,19 @@ def upload():
 
     return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre, euclidean_distance_pre = euclidean_distance_pre, euclidean_distance_post = euclidean_distance_post)
 
+
+# @app.route("/reject", methods=['POST'])
+# def reject():
+#     rejected = request.form['rejected']
+#     print("The rejected index is "+str(rejected))
+#     pre_match = request.form['pre_match']
+#     print(type(pre_match))
+#     # for col in pre_match:
+#         # print("hona be delete "+(col[int(rejected)]))
+#         # del col[int(rejected)]
+#     return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre, euclidean_distance_pre = euclidean_distance_pre, euclidean_distance_post = euclidean_distance_post)
+
+
 def checkPhotoshop():
 
     ORIG_POST = os.path.join(post_path, "POST.jpg")
@@ -308,3 +326,6 @@ def checkPhotoshop():
 
 if __name__ == "__main__":
     app.run()
+
+
+

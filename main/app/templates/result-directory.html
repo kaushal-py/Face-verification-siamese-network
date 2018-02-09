@@ -1,29 +1,143 @@
 {% extends "base.html" %}
 
-{% block element %}
-
-<div class="row container mx-auto">
-    {% for image in images %}
-    <div class="col-md-4 p-3">
-        <div class="card text-center">
-            <div class="card-header">
-              Image set {{loop.index}}
-            </div>
-            <div class="row card-body">
-                <div class="col-sm text-center">
-                    <img class="img-fluid" height="150" width="150" src="{{ image[0][0][0] }}">    
+{% block content %}
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">PDBEYC-3</a>
+    <a href="/"><button class="btn btn-primary my-2 my-sm-0 ml-12" type="submit">Upload Singular Images</button></a>
+</nav>
+<br><br>
+<div class="container">
+    <div class="row">
+        <div class="row">
+            <h3>Pre Pre Matching</h3>
+        </div>
+        <div class="row">
+            <!-- <form action="/reject" method="post"> -->
+            {% for t in range(pre_len) %}
+            
+                <div class="col-md-4 p-3" id="pre_pre_{{loop.index}}">
+                    <div class="card text-center">
+                        <div class="card-header">
+                        Image set {{t}}
+                        </div>
+                        <div class="row card-body">
+                            <div class="col-sm text-center">
+                                <img class="img-fluid" height="150" width="150" src="static{{ pre_match[1][t] }}">    
+                            </div>
+                            <div class="col-sm text-center">
+                                <img class="img-fluid" height="150" width="150" src="static/{{ pre_match[2][t] }}">    
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                        Distance = {{ pre_match[0][t] }}
+                        </div>
+                        <div class="card-footer text-muted">
+                            <input type="hidden" value="{{loop.index}}" method="post" name="rejected" id="pre_pre_index_{{loop.index}}">
+                            <input type="hidden" value="{{pre_match}}" method="post" name="pre_match" id="pre_match">
+                            <button type="submit" onclick="reject({{loop.index}},{{pre_match}})" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                            <button type="submit" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-sm text-center">
-                    <img class="img-fluid" height="150" width="150" src="{{ image[1][0][0] }}">    
-                </div>
-            </div>
-            <div class="card-footer text-muted">
-              Label = {{ image[2][0] }}
-            </div>
+            
+            {% endfor %}
+            <!-- </form> -->
         </div>
     </div>
-    <br>
-    {% endfor %}
+
+    <hr>
+
+    <div class="row">
+        <div class="row">
+            <h3>Post Post Matching</h3>
+        </div>
+        <div class="row">
+            {% for t in range(post_len) %}
+            <div class="col-md-4 p-3">
+                    <div class="card text-center">
+                        <div class="card-header">
+                            Image set {{t}}
+                        </div>
+                        <div class="row card-body">
+                            <div class="col-sm text-center">
+                                <img class="img-fluid" height="150" width="150" src="static{{ post_match[1][t] }}">    
+                            </div>
+                            <div class="col-sm text-center">
+                                <img class="img-fluid" height="150" width="150" src="static/{{ post_match[2][t] }}">    
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                            Distance = {{ post_match[0][t] }}
+                        </div>
+                        <div class="card-footer text-muted">
+                            <button type="button" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                            <button type="button" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="row">
+            <h4>Pre Post Matching</h4>
+        </div>
+        <div class="row">
+            {% for t in range(match_len) %}
+            <div class="col-md-4 p-3">
+                <div class="card text-center">
+                    <div class="card-header">
+                        Image set {{t}}
+                    </div>
+                    <div class="row card-body">
+                        <div class="col-sm text-center">
+                            <img class="img-fluid" height="150" width="150" src="static{{ match[1][t] }}">    
+                        </div>
+                        <div class="col-sm text-center">
+                            <img class="img-fluid" height="150" width="150" src="static{{ match[2][t] }}">    
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        Distance = {{ match[0][t] }}
+                    </div>
+                    <div class="card-footer text-muted">
+                        <button type="button" onclick="" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                        <button type="button" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                    </div>
+                </div>
+            </div>
+            
+            {% endfor %}
+        </div>
+    </div>
+
+    <button type="button" onclick="cont()" class="btn btn-outline-success d-inline-block .float-right">Continue</button>
+
 </div>
+
+<script>
+    
+    var list = []
+
+    function reject(index, pre_list)
+    {
+        $("div").remove("#pre_pre_"+index)       
+        list.push(index)
+    }
+
+    function cont()
+    {
+        alert(list)
+
+        $.post( "/reject", {
+            javascript_data: list 
+        });
+    }
+
+</script>
+
 
 {% endblock %}
