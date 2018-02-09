@@ -16,7 +16,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eycdata.tar.gz"):
+    def __init__(self, comparison, zip_path="eycdata.tar.gz"):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -26,6 +26,9 @@ class EycDataset(Dataset):
 
         # Class states 
         self.dataset_folder_name = 'static/eycdata'
+        self.train = False
+
+        self.comparison = comparison
 
         # Check if the path to tar file is vaild
         if not os.path.isfile(zip_path):
@@ -45,43 +48,73 @@ class EycDataset(Dataset):
         self.augment_images('static/eycdata/pre')
         self.augment_images('static/eycdata/post')
 
-        self.dataset_pre = dset.ImageFolder(root="static/eycdata/pre")
-        self.dataset_post = dset.ImageFolder(root="static/eycdata/post")
+        self.dataset_pre = dset.ImageFolder(root="static/eycdata/pre/augmented")
+        self.dataset_post = dset.ImageFolder(root="static/eycdata/post/augmented")
 
         self.number_of_images = len(self.dataset_pre.imgs)
-        print(self.number_of_images)
 
     def __len__(self):
         return self.number_of_images
     
     def __getitem__(self, idx):
         
-        # Anchor
-        img0_tuple = self.dataset_pre.imgs[idx]
-        
-        # Positive
-        label = random.randint(0, 1)
-        
-        probability = random.randint(1, 100)
-        if label == 0:
-            
-            img1_tuple = self.dataset_post.imgs[idx]
-            
-            assert img1_tuple[1] == img0_tuple[1]
+        if self.comparison=="pre-post":
+            probability = random.randint(0, 100)
+        elif self.comparison=="pre-pre":
+            probability = 0
         else:
-            if probability<60:
-                while True:
-                    img1_tuple = random.choice(self.dataset_pre.imgs)
-                    if img0_tuple[1] != img1_tuple[1]:
-                        break
-            else:
-                while True:
-                    img1_tuple = random.choice(self.dataset_post.imgs)
-                    if img0_tuple[1] != img1_tuple[1]:
-                        break
-
+            probability = 100
         
-        return img0_tuple, img1_tuple, label
+        if self.train:
+            similar_idx = (idx//20 * 20) + random.randint(0, 19)
+        else:
+            similar_idx = (idx//10 * 10) + random.randint(0, 9)
+
+        if  probability < 50:
+            anchor_tuple = self.dataset_pre.imgs[idx]
+            
+            if self.comparison=="pre-post":
+                positive_tuple = self.dataset_post.imgs[similar_idx]
+            else:
+                positive_tuple = self.dataset_pre.imgs[similar_idx]
+        
+        else:
+            anchor_tuple = self.dataset_post.imgs[idx]
+            
+            if self.comparison=="pre-post":
+                positive_tuple = self.dataset_pre.imgs[similar_idx]
+            else:
+                positive_tuple = self.dataset_post.imgs[similar_idx]
+    
+        assert anchor_tuple[1] == positive_tuple[1]
+
+        if probability < 50:
+            while True:
+                negative_tuple = random.choice(self.dataset_pre.imgs)
+                if negative_tuple[1] != anchor_tuple[1]:
+                    break
+        else:
+            while True:
+                negative_tuple = random.choice(self.dataset_post.imgs)
+                if anchor_tuple[1] != negative_tuple[1]:
+                    break
+
+        anchor = Image.open(anchor_tuple[0])
+        positive = Image.open(positive_tuple[0])
+        negative = Image.open(negative_tuple[0])
+        
+        transform=transforms.Compose([transforms.ToTensor()])
+
+        anchor = anchor.resize((50, 50), Image.ANTIALIAS)
+        positive = positive.resize((50, 50), Image.ANTIALIAS)
+        negative = negative.resize((50, 50), Image.ANTIALIAS)
+
+        anchor = transform(anchor)
+        positive = transform(positive)
+        negative = transform(negative)
+        
+        return anchor_tuple[0], positive_tuple[0], negative_tuple[0], anchor, positive, negative
+
     
     def augment_images(self, data_folder, dest_folder="augmented"):
         '''

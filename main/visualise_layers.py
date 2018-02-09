@@ -38,7 +38,7 @@ class CNNLayerVisualization():
         self.conv_output = 0
         # Generate a random image
         self.created_image, _, _ = next(data_iter)
-        print(self.created_image)
+        # print(self.created_image)
         # Create the folder to export images if not exists
         if not os.path.exists('../generated'):
             os.makedirs('../generated')
@@ -59,7 +59,7 @@ class CNNLayerVisualization():
         # Define optimizer for the image
         # Earlier layers need higher learning rates to visualize whereas later layers need less
         optimizer = SGD(self.model.parameters(), lr=5, weight_decay=1e-6)
-        for i in range(1, 51):
+        for i in range(1, 200):
             optimizer.zero_grad()
             # Assign create image to a variable to move forward in the model
             x = self.processed_image
@@ -95,7 +95,7 @@ class CNNLayerVisualization():
         # Define optimizer for the image
         # Earlier layers need higher learning rates to visualize whereas later layers need less
         optimizer = SGD([self.processed_image], lr=5, weight_decay=1e-6)
-        for i in range(1, 51):
+        for i in range(1, 501):
             optimizer.zero_grad()
             # Assign create image to a variable to move forward in the model
             x = self.processed_image
@@ -123,18 +123,18 @@ class CNNLayerVisualization():
             # Recreate image
             self.created_image = recreate_image(self.processed_image)
             # Save image
-            # if i % 5 == 0:
-            #     cv2.imwrite('../generated/layer_vis_l' + str(self.selected_layer) +
-            #                 '_f' + str(self.selected_filter) + '_iter'+str(i)+'.jpg',
-            #                 self.created_image)
+            if i % 50 == 0:
+                cv2.imwrite('../generated/layer_vis_l' + str(self.selected_layer) +
+                            '_f' + str(self.selected_filter) + '_iter'+str(i)+'.jpg',
+                            self.created_image)
 
 
 if __name__ == '__main__':
-    cnn_layer = 1
-    filter_pos = 0
+    cnn_layer = 3
+    filter_pos = 3
     # Fully connected layer is not needed
-    dataset = EycDataset(train=True)
-    net = torch.load('models/model_triplet_8.pt')
+    dataset = EycDataset()
+    net = torch.load('models/model_triplet_pr_pr3.pt')
     # print(net.parameters())
     # print(net.cnn1)
     # pretrained_model = models.vgg16(pretrained=True)

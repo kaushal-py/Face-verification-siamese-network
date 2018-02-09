@@ -15,7 +15,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data_50.tar.gz", train=False, train_size=400):
+    def __init__(self, zip_path="eyc-data_50.tar.gz", train=False, train_size=400, comparison="pre-post"):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -27,6 +27,7 @@ class EycDataset(Dataset):
         self.dataset_folder_name = '.eycdata'
         self.train = train
         self.train_size = train_size
+        self.comparison = comparison
 
         # Check if the path to tar file is vaild
         if not os.path.isfile(zip_path):
@@ -84,30 +85,37 @@ class EycDataset(Dataset):
     
     def __getitem__(self, idx):
         
-        # Anchor
+        if self.comparison=="pre-post":
+            probability = random.randint(0, 100)
+        elif self.comparison=="pre-pre":
+            probability = 0
+        else:
+            probability = 100
         
-        # Positive
-        probability = random.randint(0, 100)
         if self.train:
             similar_idx = (idx//20 * 20) + random.randint(0, 19)
-            if  probability < 101:
-                anchor_tuple = self.dataset_pre.imgs[idx]
-                positive_tuple = self.dataset_pre.imgs[similar_idx]
-            else:
-                anchor_tuple = self.dataset_pre.imgs[idx]
-                positive_tuple = self.dataset_post.imgs[similar_idx]
         else:
             similar_idx = idx
-            if  probability < 101:
-                anchor_tuple = self.dataset_pre.imgs[idx]
+
+        if  probability < 50:
+            anchor_tuple = self.dataset_pre.imgs[idx]
+            
+            if self.comparison=="pre-post":
+                positive_tuple = self.dataset_post.imgs[similar_idx]
+            else:
+                positive_tuple = self.dataset_pre.imgs[similar_idx]
+        
+        else:
+            anchor_tuple = self.dataset_post.imgs[idx]
+            
+            if self.comparison=="pre-post":
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
             else:
-                anchor_tuple = self.dataset_pre.imgs[idx]
                 positive_tuple = self.dataset_post.imgs[similar_idx]
-        
+    
         assert anchor_tuple[1] == positive_tuple[1]
 
-        if probability < 101:
+        if probability < 50:
             while True:
                 negative_tuple = random.choice(self.dataset_pre.imgs)
                 if negative_tuple[1] != anchor_tuple[1]:

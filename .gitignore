@@ -8,3 +8,4 @@ __pycache__/
 main/app/model_duplicate_post\.pt
 
 main/app/model_duplicate_pre\.pt
+generated/

@@ -1,0 +1,41 @@
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<div class="text-center">
+    {% for i in range(images) %}
+    <div class="box box{{i}}">
+        <img src="" alt="" class="img0" width="{{size}}px">
+        <img src="" alt="" class="img1" width="{{size}}px">
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .box{
+        margin: 5px;
+        padding: 5px;
+        display: inline-block
+    }
+</style>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    var socket = io.connect('http://0.0.0.0:5000/');
+
+    $i=0
+    socket.on('pre', function(data){
+
+        $box = "box" + $i;
+
+        $('.'+$box).attr('class', $box+" box bg-"+data.color);
+        $('.'+$box).find('.img0').attr('src',data.img0);
+        $('.'+ $box).find('.img1').attr('src',data.img1);
+
+        $i = ($i+1)%{{images}};
+        console.log($i)
+    })
+})
+</script>
