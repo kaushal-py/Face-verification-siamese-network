@@ -29,13 +29,13 @@
                             </div>
                         </div>
                         <div class="card-footer text-muted">
-                        Distance = {{ pre_match[0][t] }}
+                        Distance = {{ ((0.5/(0.5+pre_match[0][t]))*100) }}%
                         </div>
                         <div class="card-footer text-muted">
                             <input type="hidden" value="{{loop.index}}" method="post" name="rejected" id="pre_pre_index_{{loop.index}}">
                             <input type="hidden" value="{{pre_match}}" method="post" name="pre_match" id="pre_match">
-                            <button type="submit" onclick="reject({{loop.index}},{{pre_match}})" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
-                            <button type="submit" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                            <button type="submit" onclick="reject({{loop.index}},{{pre_match}},'#pre_pre_')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                            <button type="submit" onclick="reject({{loop.index}},{{pre_match}},'#pre_pre_')" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
                         </div>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
         </div>
         <div class="row">
             {% for t in range(post_len) %}
-            <div class="col-md-4 p-3">
+            <div class="col-md-4 p-3" id="post_post_{{loop.index}}">
                     <div class="card text-center">
                         <div class="card-header">
                             Image set {{t}}
@@ -67,11 +67,11 @@
                             </div>
                         </div>
                         <div class="card-footer text-muted">
-                            Distance = {{ post_match[0][t] }}
+                                Distance = {{ ((0.5/(0.5+post_match[0][t]))*100) }}%
                         </div>
                         <div class="card-footer text-muted">
-                            <button type="button" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
-                            <button type="button" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                            <button type="button" onclick="reject({{loop.index}},{{post_match}},'#post_post_')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                            <button type="button" onclick="reject({{loop.index}},{{post_match}},'#post_post_')" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
                         </div>
                     </div>
                 </div>
@@ -87,7 +87,7 @@
         </div>
         <div class="row">
             {% for t in range(match_len) %}
-            <div class="col-md-4 p-3">
+            <div class="col-md-4 p-3" id="pre_post_{{loop.index}}">
                 <div class="card text-center">
                     <div class="card-header">
                         Image set {{t}}
@@ -101,11 +101,11 @@
                         </div>
                     </div>
                     <div class="card-footer text-muted">
-                        Distance = {{ match[0][t] }}
+                            Distance = {{ ((0.5/(0.5+match[0][t]))*100) }}%
                     </div>
                     <div class="card-footer text-muted">
-                        <button type="button" onclick="" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
-                        <button type="button" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                        <button type="button" onclick="reject({{loop.index}},{{pre_match}},'#pre_post_')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                        <button type="button" onclick="reject({{loop.index}},{{pre_match}},'#pre_post_')" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
                     </div>
                 </div>
             </div>
@@ -122,9 +122,9 @@
     
     var list = []
 
-    function reject(index, pre_list)
+    function reject(index, pre_list, id)
     {
-        $("div").remove("#pre_pre_"+index)       
+        $("div").remove(id+index)
         list.push(index)
     }
 
