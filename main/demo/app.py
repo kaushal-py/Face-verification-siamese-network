@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader,Dataset
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
+import numpy as np
 
 import os
 import random
@@ -33,13 +34,15 @@ dataloader_pre_post = DataLoader(dataset_pre_post,
                         num_workers=8,
                         batch_size=1)
 
-net = torch.load('../models/model_triplet_pr_pr3.pt')
+print("Loading model.. ")
+net = torch.load('../models/model_triplet_pr_pr3.pt').eval()
+print("Model loaded")
 
 @app.route('/intro')
 def intro():
 
-    # 0.0.0.0:5000/intro?size=60&images=72&time=0
-    # 0.0.0.0:5000/intro?size=120&images=25&time=1
+    # http://0.0.0.0:5000/intro?size=60&images=72&time=0
+    # http://0.0.0.0:5000/intro?size=120&images=25&time=1
     #120, 25
     #60 , 72
     size = int(request.args.get('size'))
@@ -50,7 +53,7 @@ def intro():
     
     return render_template("intro.html", size=size, images=images)
     
-def pre_post_omparisons(wait_time):
+def pre_post_comparisons(wait_time):
     
     data_iter = iter(dataloader_pre)
 
@@ -92,27 +95,41 @@ def pre_post_omparisons(wait_time):
 
 @app.route('/vector')
 def display_vector():
+
+    _thread.start_new_thread(vector, ())
     return render_template('vector.html')
+
+def vector():
+    data_iter = iter(dataloader_post)
+
+    while True:
+
+        anchor_tuple, _, _, anchor, positive, negative = next(data_iter)
+
+        anchor_in, positive_in, negative_in = Variable(anchor).cuda(), Variable(positive).cuda() , Variable(negative).cuda()
+        (anchor_output, _, _)  = net(anchor_in, positive_in, negative_in)
+        
+        anchor_output = anchor_output.data.cpu().numpy()[0]
+
+        # np.set_printoptions(threshold=100)
+        anchor_output = (np.array2string(anchor_output, precision=3, separator='\t,\t', suppress_small=True))
+        anchor_output = anchor_output
+
+        # output = str(anchor_output[:3]) + " ...." + str(anchor_output[-3:-1])
+        socketio.emit('vector', {'img' : anchor_tuple, 
+                    'vector' : str(anchor_output)})
+
+        time.sleep(3)
 
 @app.route('/')
 def homepage():    
     image_set = []
-    dataiter = iter(dataloader_pre)
+    dataiter = iter(dataloader_pre_post)
 
-    for _ in range(6):
+    for _ in range(4):
         image_set.append(next(dataiter))
     
     return render_template("main.html", images=image_set)
-
-# def homepage_callback():
-    
-#     # time.sleep(1)
-#     dataiter = iter(dataloader)
-#     for _ in range(100):
-#         img0 = next(dataiter)[0][0]
-#         # print(img0)
-#         socketio.emit('counter', {'data': img0})
-#         time.sleep(2)
 
 @app.route('/photoshop')
 def photoshoppage():
@@ -120,12 +137,12 @@ def photoshoppage():
 
 @app.route('/augmentation')
 def augmentpage():
-    class_set = sorted(os.listdir('static/eycdata/pre/augmented/'))
+    class_set = sorted(os.listdir('static/eycdata/post/augmented/'))
     # print(img_set)
     img_class = random.choice(class_set)
-    image_set = sorted(os.listdir('static/eycdata/pre/augmented/'+img_class))
+    image_set = sorted(os.listdir('static/eycdata/post/augmented/'+img_class))
 
-    image_set = [ 'static/eycdata/pre/augmented/'+img_class+'/'+image for image in image_set]
+    image_set = [ 'static/eycdata/post/augmented/'+img_class+'/'+image for image in image_set]
     return render_template("augment.html", images=image_set)
 
 if __name__ == "__main__":

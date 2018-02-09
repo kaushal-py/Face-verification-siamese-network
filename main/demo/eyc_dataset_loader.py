@@ -109,6 +109,9 @@ class EycDataset(Dataset):
         positive = positive.resize((50, 50), Image.ANTIALIAS)
         negative = negative.resize((50, 50), Image.ANTIALIAS)
 
+        # anchor = anchor.convert("L")
+        # positive = positive.convert("L")
+
         anchor = transform(anchor)
         positive = transform(positive)
         negative = transform(negative)

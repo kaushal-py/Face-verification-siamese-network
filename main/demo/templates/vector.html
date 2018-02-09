@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<br><br>
+<h1 class="m-3 text-center">Image to Vector</h1>
+<br><br>
+<div class="container-fluid">
+    <div class="row p-0 text-center">
+        <div class="col-sm-4">
+            <img src="" alt=""
+            class="img-fluid img-thumbnail" width="400px">
+        </div>
+        <div class="col-sm-7 m-3">
+            <p></p><h4>Vector of size (128 X 1)</h4>
+        </div>
+       
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        var socket = io.connect('http://0.0.0.0:5000/');
+    
+        socket.on('vector', function(data){
+            $('img').attr('src', data.img);
+            $('p').html(data.vector);
+            
+        })
+    })
+</script>
+
+{% endblock %}
