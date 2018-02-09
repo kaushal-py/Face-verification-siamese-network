@@ -133,7 +133,8 @@ def homepage():
 
 @app.route('/photoshop')
 def photoshoppage():
-    return render_template("photoshop.html")
+    out = int(request.args.get('out'))
+    return render_template("photoshop.html", out=out)
 
 @app.route('/augmentation')
 def augmentpage():
