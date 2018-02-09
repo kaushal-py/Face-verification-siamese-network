@@ -37,18 +37,11 @@ def display():
 def display_directory():
     return render_template('/display-directory.html')
 
-@app.route("/upload-directory", methods=['POST'])
-def upload_directory():
-    
-    # Get Pre and Post Directories
-    pre = request.files['pre-directory']
-    post = request.files['post-directory']
+@app.route("/processing")
+def processing_folder():
 
     pref = os.path.join(pre_path, "pre-directory.zip")
     postf = os.path.join(post_path, "pre-directory.zip")
-
-    pre.save(pref)
-    post.save(postf)
 
     # Extract Zip files
     zip_ref = zipfile.ZipFile(pref, 'r')
@@ -202,8 +195,26 @@ def upload_directory():
     post_match = [post_match_dist,post_match_img,post_match_old]
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
+    return render_template('result-directory.html')
 
     return render_template("result-single.html", pre_match = pre_match, post_match = post_match, match = match)
+
+@app.route("/upload-directory", methods=['POST'])
+def upload_directory():
+    
+    # Get Pre and Post Directories
+    pre = request.files['pre-directory']
+    post = request.files['post-directory']
+
+    pref = os.path.join(pre_path, "pre-directory.zip")
+    postf = os.path.join(post_path, "pre-directory.zip")
+
+    pre.save(pref)
+    post.save(postf)
+
+    return render_template("processing.html")
+
+    
 
 @app.route("/upload", methods=['POST'])
 def upload():
