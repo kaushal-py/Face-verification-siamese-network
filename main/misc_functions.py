@@ -122,7 +122,7 @@ def recreate_image(im_as_var):
     reverse_mean = [-0.485, -0.456, -0.406]
     reverse_std = [1/0.229, 1/0.224, 1/0.225]
     recreated_im = copy.copy(im_as_var.data.cpu().numpy()[0])
-    for c in range(3):
+    for c in range(1):
         recreated_im[c] /= reverse_std[c]
         recreated_im[c] -= reverse_mean[c]
     recreated_im[recreated_im > 1] = 1

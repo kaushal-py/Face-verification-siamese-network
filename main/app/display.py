@@ -40,18 +40,11 @@ def display():
 def display_directory():
     return render_template('/display-directory.html')
 
-@app.route("/upload-directory", methods=['POST'])
-def upload_directory():
-    
-    # Get Pre and Post Directories
-    pre = request.files['pre-directory']
-    post = request.files['post-directory']
+@app.route("/processing")
+def processing_folder():
 
     pref = os.path.join(pre_path, "pre-directory.zip")
     postf = os.path.join(post_path, "pre-directory.zip")
-
-    pre.save(pref)
-    post.save(postf)
 
     # Extract Zip files
     zip_ref = zipfile.ZipFile(pref, 'r')
@@ -130,11 +123,26 @@ def upload_directory():
     post_match_dist = []
     post_match_old = []
 
+    cnt_pre_cnt = []
+    cnt_pre_name = []
+    cnt_post_cnt = []
+    cnt_post_name = []
+
     data_iter_pre = iter(dataloader_pre)
     data_iter_post = iter(dataloader_post)
     data_iter = iter(dataloader)
 
     for x in range(len(listpre)):
+
+        
+        cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
+        if cnt_pre > 100:
+            cnt_pre_cnt.append(cnt_pre)
+            cnt_pre_name.append(dirpre + "/" + str(x) + "/" + listpre[x])
+
+        if cnt_post > 100:
+            cnt_post_cnt.append(cnt_post)
+            cnt_post_name.append(dirpost + "/" + str(x) + "/" + listpost[x])
 
         (img0, img1) = next(data_iter_pre)
 
@@ -142,8 +150,13 @@ def upload_directory():
         # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         img0, img1 = Variable(img0), Variable(img1)
         (img0_output_pre, img1_output)  = net_pre(img0, img1)
+        img1_output = img1_output.data.numpy()[0]
         img0_output_pre = img0_output_pre.data.numpy()[0]
-        output_pre = str(img0_output_pre.tolist())[1:-1]
+        output_pre = str(img1_output.tolist())[1:-1]
+        csv_pre = open("static/pre_values.csv",'a')
+        csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
+        csv_pre.close()
+        
         for y in range(0,df_pre.count()[0]-1):
             get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img0_output_pre - get_val)
@@ -151,9 +164,6 @@ def upload_directory():
                 pre_match_dist.append(euclidean_distance)
                 pre_match_img.append("/images/pre/"+listpre[x])
                 pre_match_old.append(df_pre.iloc[y][0])
-        csv_pre = open("static/pre_values.csv",'a')
-        csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
-        csv_pre.close()
 
 
         (img0, img1) = next(data_iter_post)
@@ -162,8 +172,12 @@ def upload_directory():
         img0, img1 = Variable(img0), Variable(img1)
         # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         (img0_output_post, img1_output)  = net_post(img0, img1)
+        img1_output = img1_output.data.numpy()[0]
         img0_output_post = img0_output_post.data.numpy()[0]
-        output_post = str(img0_output_post.tolist())[1:-1]
+        output_post = str(img1_output.tolist())[1:-1]
+        csv_post = open("static/post_values.csv",'a')
+        csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
+        csv_post.close()
         for y in range(0,df_post.count()[0]-1):
             get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img0_output_post - get_val)
@@ -172,9 +186,6 @@ def upload_directory():
                 post_match_dist.append(euclidean_distance)
                 post_match_img.append("/images/post/"+listpost[x])
                 post_match_old.append(df_post.iloc[y][0])
-        csv_post = open("static/post_values.csv",'a')
-        csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
-        csv_post.close()
 
 
         (img0, img1) = next(data_iter)
@@ -192,8 +203,8 @@ def upload_directory():
         match_pre.append("/images/pre/"+listpre[x])
         match_post.append("/images/post/"+listpost[x])
         match_dist.append(euclidean_distance)
-
-    for x in range(0,len(listpre)):
+    
+    for x in range(len(listpre)):
         os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
         os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"static/images/post/"+listpost[x])
 
@@ -206,10 +217,28 @@ def upload_directory():
     match_len = len(match[0])
     pre_len = len(pre_match[0])
     post_len = len(post_match[0])
+    cnt_pre_list = [cnt_pre_name, cnt_pre_cnt]
+    cnt_post_list = [cnt_post_name, cnt_post_cnt]
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
-    # return match
-    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len)
+    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list)
+
+@app.route("/upload-directory", methods=['POST'])
+def upload_directory():
+    
+    # Get Pre and Post Directories
+    pre = request.files['pre-directory']
+    post = request.files['post-directory']
+
+    pref = os.path.join(pre_path, "pre-directory.zip")
+    postf = os.path.join(post_path, "pre-directory.zip")
+
+    pre.save(pref)
+    post.save(postf)
+
+    return render_template("processing.html")
+
+    
 
 @app.route("/upload", methods=['POST'])
 def upload():
@@ -227,7 +256,7 @@ def upload():
     post.save(postf)
     
     # Check if image is Photoshopped
-    cnt_post, cnt_pre = checkPhotoshop()
+    cnt_post, cnt_pre = checkPhotoshop(pre_path,"PRE.jpg",post_path,"POST.jpg")
 
     # Load Images
     dataset = AppDataset()
@@ -267,24 +296,11 @@ def upload():
 
     return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre, euclidean_distance_pre = euclidean_distance_pre, euclidean_distance_post = euclidean_distance_post)
 
+def checkPhotoshop(pre_path, pre_name, post_path, post_name):
 
-# @app.route("/reject", methods=['POST'])
-# def reject():
-#     rejected = request.form['rejected']
-#     print("The rejected index is "+str(rejected))
-#     pre_match = request.form['pre_match']
-#     print(type(pre_match))
-#     # for col in pre_match:
-#         # print("hona be delete "+(col[int(rejected)]))
-#         # del col[int(rejected)]
-#     return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre, euclidean_distance_pre = euclidean_distance_pre, euclidean_distance_post = euclidean_distance_post)
-
-
-def checkPhotoshop():
-
-    ORIG_POST = os.path.join(post_path, "POST.jpg")
+    ORIG_POST = os.path.join(post_path, post_name)
     TEMP_POST = os.path.join(post_path, "POST-TEMP.jpg")
-    ORIG_PRE = os.path.join(pre_path, "PRE.jpg")
+    ORIG_PRE = os.path.join(pre_path, pre_name)
     TEMP_PRE = os.path.join(pre_path, "PRE-TEMP.jpg")
     SCALE = 15
 
