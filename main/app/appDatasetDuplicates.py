@@ -12,11 +12,12 @@ class AppDatasetDuplicates(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, pre, post, train=False, train_size=200):
+    def __init__(self, pre, post, newModel, train=False, train_size=200):
 
         # Class states 
         self.pre = pre
         self.post = post
+        self.newModel = newModel
 
         self.dataset_pre = dset.ImageFolder(root=pre)
         self.dataset_post = dset.ImageFolder(root=post)
@@ -31,13 +32,14 @@ class AppDatasetDuplicates(Dataset):
         img0_tuple = self.dataset_pre.imgs[idx]
         img1_tuple = self.dataset_pre.imgs[idx]
 
-        img0 = Image.open(img0_tuple[0])
-        img1 = Image.open(img1_tuple[0])
+        img0 = Image.open(img0_tuple[0]).resize((50,50),Image.NEAREST)
+        img1 = Image.open(img1_tuple[0]).resize((50,50),Image.NEAREST)
         
         transform=transforms.Compose([transforms.ToTensor()])
 
-        img0 = img0.convert("L")
-        img1 = img1.convert("L")
+        if self.newModel == False:
+            img0 = img0.convert("L")
+            img1 = img1.convert("L")
 
         img0 = transform(img0)
         img1 = transform(img1)

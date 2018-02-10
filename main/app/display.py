@@ -320,11 +320,11 @@ if __name__ == "__main__":
     app.run()
 
 
-df = pd.read_csv("pre_values.csv")
-for x in range(0,df.count()[0]-1):
-    get_val1 = df.iloc[x][1:129].as_matrix(columns=None)
-    img1_path = df.iloc[x][0].as_matrix(columns=None)
-    for y in range(0,df.count()[0]-1):
-            get_val2 = df.iloc[y][1:129].as_matrix(columns=None)            
-            img2_path = df.iloc[y][0].as_matrix(columns=None)
-            euclidean_distance = np.linalg.norm(get_val1 - get_val2)
+# df = pd.read_csv("pre_values.csv")
+# for x in range(0,df.count()[0]-1):
+#     get_val1 = df.iloc[x][1:129].as_matrix(columns=None)
+#     img1_path = df.iloc[x][0].as_matrix(columns=None)
+#     for y in range(0,df.count()[0]-1):
+#             get_val2 = df.iloc[y][1:129].as_matrix(columns=None)            
+#             img2_path = df.iloc[y][0].as_matrix(columns=None)
+#             euclidean_distance = np.linalg.norm(get_val1 - get_val2)    

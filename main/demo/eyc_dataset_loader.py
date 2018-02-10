@@ -45,11 +45,11 @@ class EycDataset(Dataset):
         else:
             print("Data folder already created.")
 
-        self.augment_images('static/eycdata/pre')
-        self.augment_images('static/eycdata/post')
+        self.augment_images('static/eycdata/pre', dest_folder='../augmented/pre')
+        self.augment_images('static/eycdata/post', dest_folder='../augmented/post')
 
-        self.dataset_pre = dset.ImageFolder(root="static/eycdata/pre/augmented")
-        self.dataset_post = dset.ImageFolder(root="static/eycdata/post/augmented")
+        self.dataset_pre = dset.ImageFolder(root="static/eycdata/pre")
+        self.dataset_post = dset.ImageFolder(root="static/eycdata/post")
 
         self.number_of_images = len(self.dataset_pre.imgs)
 
@@ -135,7 +135,7 @@ class EycDataset(Dataset):
             p.rotate(probability=0.7, max_left_rotation=15, max_right_rotation=15)
             p.zoom(probability=0.3, min_factor=1, max_factor=1.3)
             p.random_distortion(probability=0.3, grid_width=4, grid_height=4, magnitude=1)
-            p.sample(1000)
+            p.sample(10000)
             # p.resize(probability=1, height=100, width=100)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)
@@ -143,4 +143,4 @@ class EycDataset(Dataset):
     
     
 if __name__ == "__main__":
-    eyc_data = EycDataset()
+    eyc_data = EycDataset(comparison="pre-post")

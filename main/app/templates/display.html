@@ -3,18 +3,19 @@
 {% block content %}
 <nav class="navbar navbar-inverse bg-inverse">
     <a class="navbar-brand" href="#">PDBEYC-3</a>
-    <a href="/"><button class="btn btn-primary my-2 my-sm-0 ml-12" type="submit">Upload Singular Images</button></a>
+    <a href="/display-directory"><button class="btn btn-primary my-2 my-sm-0 ml-12" type="submit">Upload Batch Images</button></a>
 </nav>
 <hr>
 
 <div class="container">
+    <form action="/upload" method="post" enctype="multipart/form-data">
     <div class="row">
         <div class="col">
             <div class="text-center"><h3>Pre Operation</h3></div>
             <br>
             <br>
             <!-- <input type="file" name="pre" class="file col-md-offset-4 col-md-4" id="preop" value="+"/> -->
-            <img class="mx-auto d-block" id="preimg" src='/static/default.jpg' alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
+            <img class="mx-auto d-block" id="preimg" src='/static/default.jpg' height="250" width="250" alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
             <div class="form-control" data-provides="fileinput">
                 <input type="file" name="pre" id="getimgpre" onchange="document.getElementById('preimg').src = window.URL.createObjectURL(this.files[0])"></span>
             </div>
@@ -24,11 +25,18 @@
             <br>
             <br>
             <!-- <input type="file" name="post" class="file col-md-offset-4 col-md-4" id="postop" value="+"/> -->
-            <img class="mx-auto d-block" id="postimg" src='/static/default.jpg' alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
+            <img class="mx-auto d-block" id="postimg" src='/static/default.jpg' height="250" width="250" alt="loaded image will be shown here" onerror="this.src='/static/default.jpg'" />
             <div class="form-control" data-provides="fileinput">
                 <input type="file" name="post" id="getimgpost" onchange="document.getElementById('postimg').src = window.URL.createObjectURL(this.files[0])"></span>
             </div>
         </div>
     </div>
+    <br><br>
+        <div class="row text-center">
+            <div class="col">
+                <input type="submit" value="Submit" id="postop" class="text-center btn btn-large btn-success btn-block"/>                
+            </div>
+        </div>
+    </form>
 </div>
 {% endblock %}

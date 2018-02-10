@@ -133,7 +133,8 @@ def homepage():
 
 @app.route('/photoshop')
 def photoshoppage():
-    return render_template("photoshop.html")
+    out = int(request.args.get('out'))
+    return render_template("photoshop.html", out=out)
 
 @app.route('/augmentation')
 def augmentpage():
@@ -146,4 +147,4 @@ def augmentpage():
     return render_template("augment.html", images=image_set)
 
 if __name__ == "__main__":
-    socketio.run(app, host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', debug=True)

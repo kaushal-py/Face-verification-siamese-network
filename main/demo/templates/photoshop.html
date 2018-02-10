@@ -2,33 +2,68 @@
 
 {% block content %}
 <div class="container-fluid">
+    {% if out == 0 %}
+
     <div class="row p-0">
         <div class="col-sm-4 p-0">
-            <img src="/static/photoshop/PRE_F240445_23_21_R.jpg" alt=""
+            <img src="/static/photoshop/images/F242603_PR.jpg" alt=""
             class="img-fluid">
         </div>
         <div class="col-sm-4 p-0">
             <img class="img-fluid"
-            src="/static/photoshop/PRE_F240447_23_21_R.jpg" alt="">
+            src="/static/photoshop/images/F242603_PO.jpg" alt="">
         </div>
         <div class="col-sm-4 p-0">
             <img class="img-fluid"
-            src="/static/photoshop/PRE_F240448_23_21_L.jpg" alt="">
+            src="/static/photoshop/images/F242603_PR_wp.jpg" alt="">
         </div>
     </div>
     <div class="row p-0">
         <div class="col-sm-4 p-0">
-            <img src="/static/photoshop/PRE_F240449_23_21_R.jpg" alt=""
+            <img src="/static/photoshop/images/PO_p.jpg" alt=""
             class="img-fluid">
         </div>
         <div class="col-sm-4 p-0">
             <img class="img-fluid"
-            src="/static/photoshop/PRE_F240450_23_21_R.jpg" alt="">
+            src="/static/photoshop/images/PRE_F242566_23_21_R.jpg" alt="">
         </div>
         <div class="col-sm-4 p-0">
-            <img class="img-fluid"
-            src="/static/photoshop/PRE_F240451_23_21_R.jpg" alt="">
+            <a href="/photoshop?out=1"><img class="img-fluid"
+            src="/static/photoshop/images/PRE_F242661_23_21_L.jpg" alt=""></a>
         </div>
     </div>
+
+    {%else%}
+
+    <div class="row p-0">
+            <div class="col-sm-4 p-0">
+                <img src="/static/photoshop/elas/F242603_PR.jpg" alt=""
+                class="img-fluid">
+            </div>
+            <div class="col-sm-4 p-0">
+                <img class="img-fluid"
+                src="/static/photoshop/elas/F242603_PO.jpg" alt="">
+            </div>
+            <div class="col-sm-4 p-0">
+                <img class="img-fluid"
+                src="/static/photoshop/elas/F242603_PR_wp.jpg" alt="">
+            </div>
+        </div>
+        <div class="row p-0">
+            <div class="col-sm-4 p-0">
+                <img src="/static/photoshop/elas/PO_p.jpg" alt=""
+                class="img-fluid">
+            </div>
+            <div class="col-sm-4 p-0">
+                <img class="img-fluid"
+                src="/static/photoshop/elas/PRE_F242566_23_21_R.jpg" alt="">
+            </div>
+            <div class="col-sm-4 p-0">
+                <a href="/photoshop?out=0"><img class="img-fluid"
+                src="/static/photoshop/elas/PRE_F242661_23_21_L.jpg" alt=""></a>
+            </div>
+        </div>
+
+    {% endif %}
 </div>
 {% endblock %}
