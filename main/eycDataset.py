@@ -15,7 +15,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eyc-data_50.tar.gz", train=False, train_size=400, comparison="pre-post"):
+    def __init__(self, zip_path="eycdata_new.tar.gz", train=False, train_size=0, comparison="pre-post"):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -41,6 +41,16 @@ class EycDataset(Dataset):
             eyc_tar.extractall(self.dataset_folder_name)
             print("Done extracting files to ", self.dataset_folder_name)
 
+            for file in os.listdir(".eycdata/pre"):
+                foldername = ".eycdata/pre/"+file[4:-4]
+                os.mkdir(foldername)
+                os.rename(".eycdata/pre/" + file, foldername+"/"+file)
+            
+            for file in os.listdir(".eycdata/post"):
+                foldername = ".eycdata/post/"+file[5:-4]
+                os.mkdir(foldername)
+                os.rename(".eycdata/post/" + file, foldername+"/"+file)
+            
             # Get pre and post image files from the directory
             data_pre = sorted(os.listdir(".eycdata/pre"))
             data_post = sorted(os.listdir(".eycdata/post"))
@@ -135,6 +145,10 @@ class EycDataset(Dataset):
         # anchor = anchor.convert("L")
         # positive = positive.convert("L")
         # negative = negative.convert("L")
+
+        anchor = anchor.resize((50, 50), Image.ANTIALIAS)
+        positive = positive.resize((50, 50), Image.ANTIALIAS)
+        negative = negative.resize((50, 50), Image.ANTIALIAS)
 
         anchor = transform(anchor)
         positive = transform(positive)

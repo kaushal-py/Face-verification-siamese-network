@@ -9,7 +9,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 dataset = EycDataset()
-net = torch.load('models/model_triplet_pr_pr3.pt').eval()
+net = torch.load('models/model_triplet_pr_po1000.pt').eval()
 
 dataloader = DataLoader(dataset,
                         shuffle=False,
@@ -21,7 +21,7 @@ data_iter = iter(dataloader)
 count_same = 0
 count_diff = 0
 
-for i in range(400):
+for i in range(50):
     
     anchor, positive, negative = next(data_iter)
 
@@ -35,9 +35,9 @@ for i in range(400):
     diff_distance = diff_distance.data.cpu().numpy()[0][0]
     
     print(same_distance, diff_distance)
-    if same_distance > 0.5:
+    if same_distance > 0.6:
         count_same+=1
-    if diff_distance < 0.5:
+    if diff_distance < 0.6:
         count_diff+=1
     
 print(count_same, " - ", count_diff)

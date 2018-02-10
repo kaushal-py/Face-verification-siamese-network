@@ -1,26 +1,84 @@
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script
+    src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
+<nav class="navbar navbar-expand-lg navbar-light text-white"
+    style="background-color: #4A33E8;">
+    <a class="navbar-brand text-white" href="#">EYC3PDBS3</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+        <li class="nav-item">
+        <a class="nav-link text-white" href="/intro?size=215&images=9&time=2">Intro</a>
+        </li>
+        <li class="nav-item">
+        <a class="nav-link text-white" href="/augmentation">Preprocessing</a>
+        </li>
+        <li class="nav-item">
+        <a class="nav-link text-white" href="/vector">Vector Representation</a>
+        </li>
+        <li class="nav-item active">
+        <a class="nav-link text-white" href="/">Triplets</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-white" href="/intro?size=60&images=63&time=0.2">SpeedTest</a>
+        </li>
+        <li class="nav-item">
+        <a class="nav-link text-white" href="/photoshop">Photoshop</a>
+        </li>
+    </ul>
+    </div>
+</nav>
+
 <div class="text-left">
     {% for i in range(images) %}
     <div class="box box{{i}}">
-        <img src="" alt="" class="img0" width="{{size}}px">
-        <img src="" alt="" class="img1" width="{{size}}px">
+        <img src="" alt="" class="img0" width="{{size}}px"><img src="" alt="" class="img1" width="{{size}}px">
     </div>
     {% endfor %}
 </div>
 
+<div class="tag text-white">
+    <div class="green-label"></div> . Same Person <br><br>
+    <div class="red-label"></div> . Different Person
+</div>
+
 <style>
     .box{
-        margin: 2px;
         padding: 10px;
-        display: inline-block
+        display: inline-block;
+        float: left;
+        border: 1px #aaa solid;
     }
     .bg-green{
         background-color: lightgreen
+    }
+    .green-label{
+        float: left;
+        background-color: lightgreen;
+        width: 30px;
+        height: 30px;
+    }
+    .red-label{
+        float: left;
+        background-color: red;
+        width: 30px;
+        height: 30px;
+    }
+    .tag{
+        background-color: #4A33E8;
+        position: absolute;
+        bottom: 20px;
+        left: 40px;
+        padding: 10px;
+        z-index: 99;
     }
 </style>
 
@@ -34,8 +92,13 @@ $(document).ready(function(){
         $box = "box" + $i;
 
         $('.'+$box).attr('class', $box+" box bg-"+data.color);
-        $('.'+$box).find('.img0').attr('src',data.img0);
-        $('.'+ $box).find('.img1').attr('src',data.img1);
+
+
+        $('.'+$box).fadeOut(200, function() {
+            $('.'+$box).find('.img1').attr('src',data.img1);            
+            $('.'+$box).find('.img0').attr('src',data.img0);
+        })
+        .fadeIn(200);
 
         $i = ($i+1)%{{images}};
         console.log($i)
