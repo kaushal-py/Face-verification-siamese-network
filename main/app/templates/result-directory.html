@@ -30,12 +30,11 @@
                         </div>
                         <div class="card-footer text-muted">
                         Distance = {{ ((0.5/(0.5+pre_match[0][t]))*100) }}%
+                        <br>
                         </div>
                         <div class="card-footer text-muted">
-                            <input type="hidden" value="{{loop.index}}" method="post" name="rejected" id="pre_pre_index_{{loop.index}}">
-                            <input type="hidden" value="{{pre_match}}" method="post" name="pre_match" id="pre_match">
-                            <button type="submit" onclick="reject({{loop.index}},{{pre_match}},'#pre_pre_')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
-                            <button type="submit" onclick="reject({{loop.index}},{{pre_match}},'#pre_pre_')" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                            <button type="submit" onclick="reject({{loop.index}},'#pre_pre_','{{pre_match[1][t]}}')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                            <button type="submit" onclick="accept({{loop.index}},'#pre_pre_','{{pre_match[1][t]}}')" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
                         </div>
                     </div>
                 </div>
@@ -121,20 +120,31 @@
 <script>
     
     var list = []
+    var idx
+    var demo = 1
 
-    function reject(index, pre_list, id)
+    var socket = io.connect('http://0.0.0.0:5000/');
+
+    $(document).ready(function(){
+        
+
+        socket.on('connect',function(){
+            socket.emit('connection', {data: "Connection Checking"});
+        });
+    })
+    
+    function reject(index, id, img)
     {
         $("div").remove(id+index)
-        list.push(index)
+        idx = index
+        socket.emit('reject',img)
     }
 
-    function cont()
+    function accept(index, id, img)
     {
-        alert(list)
-
-        $.post( "/reject", {
-            javascript_data: list 
-        });
+        $("div").remove(id+index)
+        idx = index
+        socket.emit('accept',img)
     }
 
 </script>

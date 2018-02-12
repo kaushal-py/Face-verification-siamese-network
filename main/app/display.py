@@ -14,9 +14,12 @@ import zipfile
 import os
 import pandas as pd
 import shutil
+from flask_socketio import SocketIO, send
 
 app = Flask(__name__)
 app.config['CACHE_TYPE'] = "null"
+app.config['SECRET_KEY'] = "kaushalrocks"
+socketio = SocketIO(app)
 
 pre_path = "static/upload/pre/temp"
 post_path = "static/upload/post/temp"
@@ -106,10 +109,6 @@ def processing():
                         num_workers=4,
                         batch_size=1)
 
-    # Read csv here
-    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
-    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
-
     match_dist = []
     match_pre = []
     match_post = []
@@ -192,14 +191,22 @@ def processing():
         match_post.append("/images/post/"+listpost[x])
         match_dist.append(euclidean_distance)
     
+    # Read csv here
+    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
+    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
+
     for x in range(0,len(img_output_pre)):
         for y in range(0,df_pre.count()[0]-1):
             get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img_output_pre[x] - get_val)
-            if euclidean_distance < 1:
+            if euclidean_distance < 0.5:
                 pre_match_dist.append(euclidean_distance)
                 pre_match_img.append("/images/pre/"+listpre[x])
                 pre_match_old.append(df_pre.iloc[y][0])
+            else :
+                csv_img = open("static/images.csv",'a')
+                csv_img.write("\n/images/pre/"+listpre[x]+", "+str(1))
+                csv_img.close()
     
     for x in range(0,len(img_output_post)):
         for y in range(0,df_post.count()[0]-1):
@@ -209,6 +216,10 @@ def processing():
                 post_match_dist.append(euclidean_distance)
                 post_match_img.append("/images/post/"+listpost[x])
                 post_match_old.append(df_post.iloc[y][0])
+            else :
+                csv_img = open("static/images.csv",'a')
+                csv_img.write("\n/images/post/"+listpre[x]+", "+str(1))
+                csv_img.close()
 
     for x in range(0,len(listpre)):
         os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
@@ -302,6 +313,22 @@ def upload():
 
     return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre)
 
+
+@socketio.on('reject')
+def handleRejected(img):
+    print("The index is "+str(img))
+    csv_img = open("static/images.csv",'a')
+    csv_img.write("\n"+str(img)+", "+str(0))
+    csv_img.close()
+
+@socketio.on('accept')
+def handleRejected(img):
+    print("The index is "+str(img))
+    csv_img = open("static/images.csv",'a')
+    csv_img.write("\n"+str(img)+", "+str(1))
+    csv_img.close()
+
+
 def checkPhotoshop(pre_path, pre_name, post_path, post_name):
 
     ORIG_POST = os.path.join(post_path, post_name)
@@ -347,7 +374,8 @@ def checkPhotoshop(pre_path, pre_name, post_path, post_name):
     return cnt_post, cnt_pre
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # app.run(debug=True)
+    socketio.run(app, debug=True)
 
 
 # df = pd.read_csv("pre_values.csv")
