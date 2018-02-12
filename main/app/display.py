@@ -37,11 +37,18 @@ def display():
 def display_directory():
     return render_template('/display-directory.html')
 
-@app.route("/processing")
-def processing_folder():
+@app.route("/upload-directory", methods=['POST'])
+def upload_directory():
+    
+    # Get Pre and Post Directories
+    pre = request.files['pre-directory']
+    post = request.files['post-directory']
 
     pref = os.path.join(pre_path, "pre-directory.zip")
     postf = os.path.join(post_path, "pre-directory.zip")
+
+    pre.save(pref)
+    post.save(postf)
 
     # Extract Zip files
     zip_ref = zipfile.ZipFile(pref, 'r')
@@ -193,11 +200,14 @@ def processing_folder():
     match = [match_pre, match_post, match_dist]
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
+    match_len = len(match[0])
+    pre_len = len(pre_match[0])
+    post_len = len(post_match[0])
+    cnt_pre_list = [cnt_pre_name, cnt_pre_cnt]
+    cnt_post_list = [cnt_post_name, cnt_post_cnt]
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
-    return render_template('result-directory.html')
-
-    return render_template("result-single.html", pre_match = pre_match, post_match = post_match, match = match)
+    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list)
 
 @app.route("/upload-directory", methods=['POST'])
 def upload_directory():
@@ -270,11 +280,11 @@ def upload():
     # distances.append(euclidean_distance)
     print(euclidean_distance)
 
-    return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre, euclidean_distance_pre = euclidean_distance_pre, euclidean_distance_post = euclidean_distance_post)
+    return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre)
 
-def checkPhotoshop():
+def checkPhotoshop(pre_path, pre_name, post_path, post_name):
 
-    ORIG_POST = os.path.join(post_path, "POST.jpg")
+    ORIG_POST = os.path.join(post_path, post_name)
     TEMP_POST = os.path.join(post_path, "POST-TEMP.jpg")
     ORIG_PRE = os.path.join(pre_path, "PRE.jpg")
     TEMP_PRE = os.path.join(pre_path, "PRE-TEMP.jpg")
