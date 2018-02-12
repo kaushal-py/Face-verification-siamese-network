@@ -8,8 +8,9 @@ from siamese import SiameseNetwork
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-dataset = EycDataset()
-net = torch.load('models/model_triplet_pr_po1000.pt').eval()
+dataset = EycDataset(comparison="pre-post")
+print("Loading model")
+net = torch.load('models/model_triplet_pr_pr3.pt').eval()
 
 dataloader = DataLoader(dataset,
                         shuffle=False,
@@ -21,7 +22,7 @@ data_iter = iter(dataloader)
 count_same = 0
 count_diff = 0
 
-for i in range(50):
+for i in range(600):
     
     anchor, positive, negative = next(data_iter)
 
