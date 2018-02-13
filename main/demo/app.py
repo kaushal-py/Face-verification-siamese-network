@@ -7,6 +7,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
 import numpy as np
+from PIL import ImageOps
 
 import os
 import random
@@ -36,7 +37,7 @@ dataloader_pre_post = DataLoader(dataset_pre_post,
 
 print("Loading models.. ")
 net_pre = torch.load('../models/model_triplet_pr_pr3.pt').eval()
-net_pre_post = torch.load('../models/model_triplet_pr_po1000.pt').eval()
+net_pre_post = torch.load('../models/model_triplet_pr_po_max_pool_fix.pt').eval()
 print("Models loaded")
 
 @app.route('/intro')

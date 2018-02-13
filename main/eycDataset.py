@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision.datasets as dset
 import Augmentor
 from PIL import Image
+from PIL import ImageOps
 import torchvision.transforms as transforms
 from config import Config
 
@@ -15,7 +16,7 @@ class EycDataset(Dataset):
     Perform transformations on the dataset as required
     """
 
-    def __init__(self, zip_path="eycdata.tar.gz", train=False, train_size=0, comparison="pre-post"):
+    def __init__(self, zip_path="eycdata.tar.gz", train=False, train_size=400, comparison="pre-post"):
         """
         Initialisation of the dataset does the following actions - 
         1. Extract the dataset tar file.
@@ -52,8 +53,10 @@ class EycDataset(Dataset):
             #     os.rename(".eycdata/post/" + file, foldername+"/"+file)
             
             # Get pre and post image files from the directory
-            data_pre = sorted(os.listdir(".eycdata/pre"))
-            data_post = sorted(os.listdir(".eycdata/post"))
+            import eye_detector
+
+            data_pre = sorted(os.listdir(".eycdata/patch"))
+            data_post = sorted(os.listdir(".eycdata/postbg"))
 
             # Randomize the data
             data_pair = list(zip(data_pre, data_post))
@@ -68,10 +71,10 @@ class EycDataset(Dataset):
 
             print("Making training and test data..")
 
-            self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
-            self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
-            self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
-            self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
+            self.moveToFolder(".eycdata/patch", data_pre_train, ".eycdata/train/pre")
+            self.moveToFolder(".eycdata/patch", data_pre_test, ".eycdata/test/pre")
+            self.moveToFolder(".eycdata/postbg", data_post_train, ".eycdata/train/post")
+            self.moveToFolder(".eycdata/postbg", data_post_test, ".eycdata/test/post")
 
         else:
             print("Data folder already created.")
@@ -79,6 +82,9 @@ class EycDataset(Dataset):
         if self.train:
             self.augment_images(".eycdata/train/pre")
             self.augment_images(".eycdata/train/post")
+        # else:
+        #     self.augment_images(".eycdata/test/pre")
+        #     self.augment_images(".eycdata/test/post")
         
         if self.train == True:
             self.dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
@@ -104,51 +110,63 @@ class EycDataset(Dataset):
         
         if self.train:
             similar_idx = (idx//20 * 20) + random.randint(0, 19)
+            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5))%8000 + random.randint(0, 19)
         else:
             similar_idx = idx
+            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5))%500 + random.randint(0, 19)
+            
 
         if  probability < 50:
             anchor_tuple = self.dataset_pre.imgs[idx]
             
             if self.comparison=="pre-post":
                 positive_tuple = self.dataset_post.imgs[similar_idx]
+                negative_tuple = self.dataset_post.imgs[diff_idx]
             else:
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
+                negative_tuple = self.dataset_pre.imgs[diff_idx]
         
         else:
             anchor_tuple = self.dataset_post.imgs[idx]
             
             if self.comparison=="pre-post":
-                positive_tuple = self.dataset_pre.imgs[similar_idx]
-            else:
                 positive_tuple = self.dataset_post.imgs[similar_idx]
-    
-        assert anchor_tuple[1] == positive_tuple[1]
+                negative_tuple = self.dataset_post.imgs[diff_idx]
+            else:
+                positive_tuple = self.dataset_pre.imgs[similar_idx]
+                negative_tuple = self.dataset_pre.imgs[diff_idx]
 
-        if probability < 50:
-            while True:
-                negative_tuple = random.choice(self.dataset_pre.imgs)
-                if negative_tuple[1] != anchor_tuple[1]:
-                    break
-        else:
-            while True:
-                negative_tuple = random.choice(self.dataset_post.imgs)
-                if anchor_tuple[1] != negative_tuple[1]:
-                    break
+        assert anchor_tuple[1] == positive_tuple[1]
+        assert anchor_tuple[1] != negative_tuple[1]
+
+        # if probability < 50:
+        #     while True:
+        #         negative_tuple = random.choice(self.dataset_post.imgs)
+        #         if negative_tuple[1] != anchor_tuple[1]:
+        #             break
+        # else:
+        #     while True:
+        #         negative_tuple = random.choice(self.dataset_pre.imgs)
+        #         if anchor_tuple[1] != negative_tuple[1]:
+        #             break
 
         anchor = Image.open(anchor_tuple[0])
         positive = Image.open(positive_tuple[0])
         negative = Image.open(negative_tuple[0])
-        
+
         transform=transforms.Compose([transforms.ToTensor()])
 
-        # anchor = anchor.convert("L")
-        # positive = positive.convert("L")
-        # negative = negative.convert("L")
+        anchor = anchor.convert("L")
+        positive = positive.convert("L")
+        negative = negative.convert("L")
 
-        anchor = anchor.resize((50, 50), Image.ANTIALIAS)
-        positive = positive.resize((50, 50), Image.ANTIALIAS)
-        negative = negative.resize((50, 50), Image.ANTIALIAS)
+        # anchor = anchor.resize((216, 216), Image.ANTIALIAS)
+        # positive = positive.resize((216, 216), Image.ANTIALIAS)
+        # negative = negative.resize((216, 216), Image.ANTIALIAS)
+
+        anchor = ImageOps.equalize(anchor)
+        positive = ImageOps.equalize(positive)
+        negative = ImageOps.equalize(negative)
 
         anchor = transform(anchor)
         positive = transform(positive)
@@ -187,10 +205,10 @@ class EycDataset(Dataset):
             print("== Augmenting images at", data_folder, " ==")
             p = Augmentor.Pipeline(data_folder, output_directory=dest_folder)
             p.flip_left_right(probability=0.5)
-            p.rotate(probability=0.7, max_left_rotation=15, max_right_rotation=15)
+            p.rotate(probability=0.9, max_left_rotation=20, max_right_rotation=20)
             p.zoom(probability=0.3, min_factor=1, max_factor=1.3)
-            p.random_distortion(probability=0.3, grid_width=4, grid_height=4, magnitude=1)
-            p.sample(8000)
+            p.random_distortion(probability=0.6, grid_width=4, grid_height=4, magnitude=1)
+            p.sample(400*20)
             # p.resize(probability=1, height=100, width=100)
         else:
             print("Augmented folder already exists at", data_folder + "/" + dest_folder)

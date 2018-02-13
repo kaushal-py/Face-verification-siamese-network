@@ -1,5 +1,5 @@
 import numpy as np
-from eycDatasetContrastive import EycDataset
+from eycDataset import EycDataset
 import torch
 from torch.utils.data import DataLoader,Dataset
 from torch import optim
@@ -30,8 +30,8 @@ optimizer = optim.Adam(net.parameters(), lr = 0.005)
 
 for epoch in range(0,epoch_num):
     for i, data in enumerate(train_dataloader):
-        (img0, img1, label) = data
-        img0, img1, label = Variable(img0).cuda(), Variable(img1).cuda(), Variable(label).cuda()
+        (img0, img1, img2) = data
+        img0, img1, img2 = Variable(img0).cuda(), Variable(img1).cuda(), Variable(img2).cuda()
         output1, output2  = net(img0, img1)
 
         optimizer.zero_grad()
@@ -42,10 +42,10 @@ for epoch in range(0,epoch_num):
         if i%10 == 0:
             # print(label)
             print("Epoch number {}\n Current loss {}\n".format(epoch,loss.data[0]))
-            with open("loss_history-13.csv", 'a') as loss_history:
-                loss_history.write(str(epoch) +
-                ","+str(loss.data[0])+"\n")
+            # with open("loss_history-13.csv", 'a') as loss_history:
+            #     loss_history.write(str(epoch) +
+            #     ","+str(loss.data[0])+"\n")
 
     print("Saving model")
-    torch.save(net, 'model_pre_post.pt')
+    torch.save(net, 'models/model_pr_po_contrastive.pt')
     print("-- Model Checkpoint saved ---")

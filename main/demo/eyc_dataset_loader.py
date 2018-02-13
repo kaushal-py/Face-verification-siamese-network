@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision.datasets as dset
 import Augmentor
 from PIL import Image
+from PIL import ImageOps
 import torchvision.transforms as transforms
 import torch
 import numpy as np
@@ -66,58 +67,70 @@ class EycDataset(Dataset):
             probability = 100
         
         if self.train:
-            similar_idx = (idx//10 * 10) + random.randint(0, 9)
+            similar_idx = (idx//20 * 20) + random.randint(0, 19)
+            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5))%8000 + random.randint(0, 19)
         else:
             similar_idx = idx
+            # diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5))%500 + random.randint(0, 19)
+            
 
         if  probability < 50:
             anchor_tuple = self.dataset_pre.imgs[idx]
             
             if self.comparison=="pre-post":
                 positive_tuple = self.dataset_post.imgs[similar_idx]
+                # negative_tuple = self.dataset_post.imgs[diff_idx]
             else:
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
+                # negative_tuple = self.dataset_pre.imgs[diff_idx]
         
         else:
             anchor_tuple = self.dataset_post.imgs[idx]
             
             if self.comparison=="pre-post":
                 positive_tuple = self.dataset_pre.imgs[similar_idx]
+                # negative_tuple = self.dataset_post.imgs[diff_idx]
             else:
-                positive_tuple = self.dataset_post.imgs[similar_idx]
-    
-        assert anchor_tuple[1] == positive_tuple[1]
+                positive_tuple = self.dataset_pre.imgs[similar_idx]
+                # negative_tuple = self.dataset_pre.imgs[diff_idx]
 
-        if probability < 50 and self.comparison != "pre-post":
+        assert anchor_tuple[1] == positive_tuple[1]
+        # assert anchor_tuple[1] != negative_tuple[1]
+
+        if probability < 50:
             while True:
-                negative_tuple = random.choice(self.dataset_pre.imgs)
+                negative_tuple = random.choice(self.dataset_post.imgs)
                 if negative_tuple[1] != anchor_tuple[1]:
                     break
         else:
             while True:
-                negative_tuple = random.choice(self.dataset_post.imgs)
+                negative_tuple = random.choice(self.dataset_pre.imgs)
                 if anchor_tuple[1] != negative_tuple[1]:
                     break
 
         anchor = Image.open(anchor_tuple[0])
         positive = Image.open(positive_tuple[0])
         negative = Image.open(negative_tuple[0])
-        
+
         transform=transforms.Compose([transforms.ToTensor()])
 
-        anchor = anchor.resize((50, 50), Image.ANTIALIAS)
-        positive = positive.resize((50, 50), Image.ANTIALIAS)
-        negative = negative.resize((50, 50), Image.ANTIALIAS)
+        anchor = anchor.convert("L")
+        positive = positive.convert("L")
+        negative = negative.convert("L")
 
-        # anchor = anchor.convert("L")
-        # positive = positive.convert("L")
+        # anchor = anchor.resize((216, 216), Image.ANTIALIAS)
+        # positive = positive.resize((216, 216), Image.ANTIALIAS)
+        # negative = negative.resize((216, 216), Image.ANTIALIAS)
+
+        anchor = ImageOps.equalize(anchor)
+        positive = ImageOps.equalize(positive)
+        negative = ImageOps.equalize(negative)
 
         anchor = transform(anchor)
         positive = transform(positive)
         negative = transform(negative)
         
         return anchor_tuple[0], positive_tuple[0], negative_tuple[0], anchor, positive, negative
-
     
     def augment_images(self, data_folder, dest_folder="augmented"):
         '''

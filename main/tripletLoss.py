@@ -14,7 +14,7 @@ class TripletLoss(torch.nn.Module):
         positive_distance = F.pairwise_distance(anchor, positive)
         negative_distance = F.pairwise_distance(anchor, negative)
 
-        dist_hinge = torch.clamp(self.margin + positive_distance - negative_distance, min=0.0)
+        dist_hinge = torch.clamp(self.margin + 2*positive_distance - negative_distance, min=0.0)
         triplet_loss = torch.mean(dist_hinge)
         
         return triplet_loss
