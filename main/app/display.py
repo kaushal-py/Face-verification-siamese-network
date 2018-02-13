@@ -314,6 +314,16 @@ def upload():
     return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre)
 
 
+@app.route("/rejected-list")
+def fetchRejected():
+    df = pd.read_csv("static/images.csv", delimiter=', ')
+    rejected_list = []
+    for row in df.itertuples():
+        if row.status == 0:
+            rejected_list.append(row.path)
+    return render_template("rejected-list.html", rejected_list = rejected_list)
+
+
 @socketio.on('reject')
 def handleRejected(img):
     print("The index is "+str(img))

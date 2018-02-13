@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">PDBEYC-3</a>
+    <a href="/"><button class="btn btn-primary my-2 my-sm-0 ml-12" type="submit">Upload Singular Images</button></a>
+</nav>
+
+
+<br><br><br>
+<div class="container">
+    <div class="row">
+        <div class="row">
+            <h3>Rejected List</h3>
+        </div>
+        <div class="row">
+            {% for path in rejected_list %}
+                <div class="col-md-3 p-3">
+                    <div class="card text-center">
+                        <div class="card-header">
+                        Image {{t}}
+                        </div>
+                        <div class="row card-body">
+                            <div class="col-sm text-center">
+                                <img src="static{{path}}" class="img-thumbnail" width="250" height="250" alt="">
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                        {{path[12:29]}}
+                        <br>
+                        </div>
+                    </div>
+                </div>
+            
+            {% endfor %}
+            <!-- </form> -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}
