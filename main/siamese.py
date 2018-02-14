@@ -11,7 +11,7 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm2d(4),
             nn.Dropout2d(p=.1),
 
-            nn.MaxPool2d(3, stride=3),
+            nn.MaxPool2d(3, stride=2),
             
             nn.ReflectionPad2d(1),
             nn.Conv2d(4, 8, kernel_size=3),
@@ -19,7 +19,7 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm2d(8),
             nn.Dropout2d(p=.2),
 
-            nn.MaxPool2d(3, stride=3),           
+            nn.MaxPool2d(3, stride=2),           
 
             nn.ReflectionPad2d(1),
             nn.Conv2d(8, 16, kernel_size=3),
@@ -27,15 +27,29 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm2d(16),
             nn.Dropout2d(p=.3),
 
-            nn.MaxPool2d(3, stride=3)          
+            nn.MaxPool2d(3, stride=2),
+
+            nn.ReflectionPad2d(1),
+            nn.Conv2d(16, 32, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(32),
+            nn.Dropout2d(p=.3), 
+
+            nn.MaxPool2d(3, stride=2)    ,
+        
+            nn.ReflectionPad2d(1),
+            nn.Conv2d(32, 64, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(64),
+            nn.Dropout2d(p=.3),         
         )
 
         self.fc1 = nn.Sequential(
-            nn.Linear(16*8*8, 512),
+            nn.Linear(64*13*13, 1024),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.4),
 
-            nn.Linear(512, 512),
+            nn.Linear(1024, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
 
