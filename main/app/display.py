@@ -32,11 +32,15 @@ net = torch.load('model_duplicate_pre.pt', map_location = lambda storage, loc:st
 # net_pre = torch.load('model_duplicate_pre.pt')
 # net_post = torch.load('model_duplicate_post.pt')
 
-@app.route("/")
+# @app.route("/")
+# def display():
+#     return render_template('/display-directory.html')
+
+@app.route("/display-single")
 def display():
     return render_template('/display.html')
 
-@app.route("/display-directory")
+@app.route("/")
 def display_directory():
     return render_template('/display-directory.html')
 
@@ -68,8 +72,8 @@ def processing():
         if os.path.isdir('static/upload/dir/post/'+str(x)):
             dirpost='static/upload/dir/post/'+str(x)
     
-    listpre = os.listdir(dirpre)
-    listpost = os.listdir(dirpost)
+    listpre = sorted(os.listdir(dirpre))
+    listpost = sorted(os.listdir(dirpost))
 
     for x in range (0,len(listpre)):
 
@@ -82,13 +86,6 @@ def processing():
 
         os.rename(dirpre+"/"+listpre[x],pref)
         os.rename(dirpost+"/"+listpost[x],postf)
-
-        im = Image.open(pref)
-        im = im.resize((50, 50), Image.NEAREST)
-        im.save(pref, "JPEG")
-        im = Image.open(postf)
-        im = im.resize((50, 50), Image.NEAREST)
-        im.save(postf, "JPEG")
 
     # Load Images
     dataset_pre = AppDatasetDuplicates(dirpre,dirpre,False)
@@ -137,11 +134,11 @@ def processing():
         cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
         if cnt_pre > 100:
             cnt_pre_cnt.append(cnt_pre)
-            cnt_pre_name.append(dirpre + "/" + str(x) + "/" + listpre[x])
+            cnt_pre_name.append(listpre[x][:24])
 
         if cnt_post > 100:
             cnt_post_cnt.append(cnt_post)
-            cnt_post_name.append(dirpost + "/" + str(x) + "/" + listpost[x])
+            cnt_post_name.append(listpost[x][:24])
 
 
         (img0, img1) = next(data_iter_pre)
@@ -238,7 +235,7 @@ def processing():
     cnt_post_list = [cnt_post_name, cnt_post_cnt]
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
-    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list)
+    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
 
 @app.route("/upload-directory", methods=['POST'])
 def upload_directory():

@@ -3,15 +3,23 @@
 {% block content %}
 <nav class="navbar navbar-dark bg-dark">
     <a class="navbar-brand" href="#">PDBEYC-3</a>
-    <a href="/"><button class="btn btn-primary my-2 my-sm-0 ml-12" type="submit">Upload Singular Images</button></a>
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+            <a href="/rejected-list"><button type="button" class="btn btn-primary ">Check the Rejected List</button></a>
+            <a href="/display-single"><button class="btn btn-primary" type="submit">Upload Singular Images</button></a>        
+        </li>
+    </ul>
 </nav>
 <br>
-<a href="/rejected-list"><button type="button" class="btn btn-outline-primary float-right mr-3">Check the Rejected List</button></a>
 <br><br>
 <div class="container">
+    
     <div class="row">
         <div class="row">
             <h3>Pre Pre Matching</h3>
+        </div><br>
+        <div class="row alert alert-info" role="alert">
+            These Pre OP images pairs match with each other. <br> Kindly Accept if you find them to be OK, Reject if you find them to be the same people
         </div>
         <div class="row">
             <!-- <form action="/reject" method="post"> -->
@@ -24,14 +32,14 @@
                         </div>
                         <div class="row card-body">
                             <div class="col-sm text-center">
-                                <img class="img-fluid" height="150" width="150" src="static{{ pre_match[1][t] }}">    
+                                <img height="140" width="140" src="static{{ pre_match[1][t] }}">    
                             </div>
                             <div class="col-sm text-center">
-                                <img class="img-fluid" height="150" width="150" src="static/{{ pre_match[2][t] }}">    
+                                <img height="140" width="140" src="static/{{ pre_match[2][t] }}">    
                             </div>
                         </div>
                         <div class="card-footer text-muted">
-                        Distance = {{ ((0.5/(0.5+pre_match[0][t]))*100) }}%
+                        Match = {{ ((0.5/(0.5+pre_match[0][t]))*100) }}%
                         <br>
                         </div>
                         <div class="card-footer text-muted">
@@ -51,6 +59,9 @@
     <div class="row">
         <div class="row">
             <h3>Post Post Matching</h3>
+        </div><br>
+        <div class="row alert alert-info" role="alert">
+            These Post OP images pairs match with each other. <br> Kindly Accept if you find them to be OK, Reject if you find them to be the same people
         </div>
         <div class="row">
             {% for t in range(post_len) %}
@@ -68,7 +79,7 @@
                             </div>
                         </div>
                         <div class="card-footer text-muted">
-                                Distance = {{ ((0.5/(0.5+post_match[0][t]))*100) }}%
+                            Match = {{ ((0.5/(0.5+post_match[0][t]))*100) }}%
                         </div>
                         <div class="card-footer text-muted">
                             <button type="button" onclick="reject({{loop.index}},{{post_match}},'#post_post_')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
@@ -85,6 +96,9 @@
     <div class="row">
         <div class="row">
             <h4>Pre Post Matching</h4>
+        </div><br>
+        <div class="row alert alert-info" role="alert">
+            These Pre OP images pairs match with each other. <br> Kindly Accept if you find them to be OK, Reject if you find them to be the same people
         </div>
         <div class="row">
             {% for t in range(match_len) %}
@@ -102,7 +116,7 @@
                         </div>
                     </div>
                     <div class="card-footer text-muted">
-                            Distance = {{ ((0.5/(0.5+match[0][t]))*100) }}%
+                        Distance = {{ ((0.5/(0.5+match[0][t]))*100) }}%
                     </div>
                     <div class="card-footer text-muted">
                         <button type="button" onclick="reject({{loop.index}},{{pre_match}},'#pre_post_')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
@@ -115,7 +129,68 @@
         </div>
     </div>
 
-    <!-- <button type="button" onclick="cont()" class="btn btn-outline-success d-inline-block .float-right">Continue</button> -->
+    <br><br><br>
+
+    <div class="row">
+        <div class="row">
+            <h3>Photoshopped Images</h3>
+        </div><br>
+        <div class="row alert alert-info" role="alert">
+            These Pre OP images pairs match with each other. <br> Kindly Accept if you find them to be OK, Reject if you find them to be the same people
+        </div>
+        <br><br><br>
+        <div class="row">
+            {% for t in range(ps_post|length) %}
+            
+                <div class="col-md-4 p-3" id="ps_post_{{loop.index}}">
+                    <div class="card text-center">
+                        <div class="card-header">
+                        Image set {{t}}
+                        </div>
+                        <div class="row card-body">
+                            <div class="col-sm text-center">
+                                <img height="140" width="140" src="static/images/post/{{ps_post[t] }}">    
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                        <br>
+                        </div>
+                        <div class="card-footer text-muted">
+                            <button type="submit" onclick="reject({{loop.index}},'#ps_post_','{{ps_post[t]}}')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                            <button type="submit" onclick="accept({{loop.index}},'#ps_post_','{{ps_post[t]}}')" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                        </div>
+                    </div>
+                </div>
+            
+            {% endfor %}
+        </div>
+
+        <div class="row">
+            {% for t in range(ps_pre|length) %}
+            
+                <div class="col-md-4 p-3" id="ps_pre_{{loop.index}}">
+                    <div class="card text-center">
+                        <div class="card-header">
+                        Image set {{t}}
+                        </div>
+                        <div class="row card-body">
+                            <div class="col-sm text-center">
+                                <img height="140" width="140" src="static/images/pre/{{ps_pre[t] }}">    
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                        <br>
+                        </div>
+                        <div class="card-footer text-muted">
+                            <button type="submit" onclick="reject({{loop.index}},'#ps_pre_','{{ps_post[t]}}')" class="btn btn-outline-danger d-inline-block .float-left">Reject</button>
+                            <button type="submit" onclick="accept({{loop.index}},'#ps_pre_','{{ps_post[t]}}')" class="btn btn-outline-success d-inline-block .float-right">Accept</button>
+                        </div>
+                    </div>
+                </div>
+            
+            {% endfor %}
+        </div>
+    </div>
 
 </div>
 
