@@ -110,10 +110,10 @@ class EycDataset(Dataset):
         
         if self.train:
             similar_idx = (idx//20 * 20) + random.randint(0, 19)
-            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5))%8000 + random.randint(0, 19)
+            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5) + random.randint(0, 19))%16000
         else:
             similar_idx = idx
-            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5))%500 + random.randint(0, 19)
+            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5) + random.randint(0, 19))%200
             
 
         if  probability < 50:
