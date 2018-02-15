@@ -267,32 +267,14 @@ def processing():
         shutil.rmtree(dirpre + "/" + str(x))
         shutil.rmtree(dirpost + "/" + str(x))
 
-    print("idhar print hua 1")
     match = [match_dist, match_pre, match_post] 
-    print("idhar print hua 2")
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
-    print("idhar print hua 3")
+
     post_match = [post_match_dist,post_match_img,post_match_old]
-    print("idhar print hua 4")
-    match_len = len(match[0])
-    print("idhar print hua 5")
-    pre_len = len(pre_match[0])
-    print("idhar print hua 6")
-    post_len = len(post_match[0])
-    print("idhar print hua 7")
-    cnt_pre_list = [cnt_pre_name, cnt_pre_cnt]
-    print("idhar print hua 8")
-    cnt_post_list = [cnt_post_name, cnt_post_cnt]
-    print("idhar print hua 9")    
-
-    shutil.rmtree(dirpre)
-    print("idhar print hua 10")
-    shutil.rmtree(dirpost)
-    print("idhar print hua 11")
-
     
-
-    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
+    shutil.rmtree(dirpre)
+    shutil.rmtree(dirpost)
+    return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
 
 @app.route("/upload-directory", methods=['POST'])
 def upload_directory():
