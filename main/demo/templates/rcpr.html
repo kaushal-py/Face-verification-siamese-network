@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="m-3 text-center">Facial Landmarks</h1>
+<br>
+
+<div class=" container text-center">
+    <div class="row">
+        <div class="col-sm-6">
+            <img class="img-thumbnail m-2" src="{{images[0]}}" alt="pre-op" width="460px">
+        </div>
+        <div class="col-sm-6">
+            <img class="img-thumbnail m-2" src="{{images[1]}}" alt="pre-op" width="440px">
+        </div>
+    </div>
+    <br>
+    <div>
+        <h2 class="text-center">Distance = ?</h2>
+    </div>
+</div>
+
+{% endblock %}

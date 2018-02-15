@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="m-3 text-center">Image to Vector</h1>
+<div class="container-fluid">
+    <div class="row p-0 text-center">
+        <div class="col-sm-3">
+            <img src="" alt=""
+            class="img-fluid img_a img-thumbnail" width="180px">
+        </div>
+        <div class="col-sm-3">
+            <img id="img_p" src="" alt=""
+            class="img-fluid img-thumbnail" width="180px">
+        </div>
+        <div class="col-sm-3">
+            <img src="" alt=""
+            class="img-fluid img_a img-thumbnail" width="180px">
+        </div>
+        <div class="col-sm-3">
+            <img id="img_n" src="" alt=""
+            class="img-fluid img-thumbnail" width="180px">
+        </div>
+    </div>
+
+    <div class="row p-0 text-center">
+        <div class="col-sm-6">
+            <div class="text-center"><h2 id="same-distance"></h2></div>
+        </div>
+        <div class="col-sm-6">
+            <div class="text-center"><h2 id="diff-distance"></h2></div>
+        </div>
+    </div>
+
+   
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        var socket = io.connect('http://0.0.0.0:8000/');
+    
+        socket.on('vector', function(data){
+            $('.img_a').attr('src', data.img_a);
+            $('#img_p').attr('src', data.img_p);
+            $('#img_n').attr('src', data.img_n);
+            $('#same-distance').html("Distance = "+data.same_distance);
+            $('#diff-distance').html("Distance = "+data.diff_distance);
+            
+            
+        })
+    })
+</script>
+
+{% endblock %}

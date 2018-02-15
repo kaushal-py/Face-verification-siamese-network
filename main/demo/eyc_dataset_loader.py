@@ -10,6 +10,8 @@ from PIL import ImageOps
 import torchvision.transforms as transforms
 import torch
 import numpy as np
+from eye_detector import Preprocess
+import cv2
 
 class EycDataset(Dataset):
     """
@@ -54,6 +56,8 @@ class EycDataset(Dataset):
 
         self.number_of_images = len(self.dataset_pre.imgs)
 
+        self.p = Preprocess("static/haarcascades_eye.xml", "static/patch.jpg")
+
     def __len__(self):
         return self.number_of_images
     
@@ -74,7 +78,7 @@ class EycDataset(Dataset):
             # diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5))%500 + random.randint(0, 19)
             
 
-        if  probability < 50:
+        if  probability < 101:
             anchor_tuple = self.dataset_pre.imgs[idx]
             
             if self.comparison=="pre-post":
@@ -97,7 +101,7 @@ class EycDataset(Dataset):
         assert anchor_tuple[1] == positive_tuple[1]
         # assert anchor_tuple[1] != negative_tuple[1]
 
-        if probability < 50:
+        if probability < 101:
             while True:
                 negative_tuple = random.choice(self.dataset_post.imgs)
                 if negative_tuple[1] != anchor_tuple[1]:
@@ -107,10 +111,23 @@ class EycDataset(Dataset):
                 negative_tuple = random.choice(self.dataset_pre.imgs)
                 if anchor_tuple[1] != negative_tuple[1]:
                     break
+        
+        out = self.p.subtract_backgroud(anchor_tuple[0])
+        anchor = self.p.add_eyeptach(out)
 
-        anchor = Image.open(anchor_tuple[0])
-        positive = Image.open(positive_tuple[0])
-        negative = Image.open(negative_tuple[0])
+        out = self.p.subtract_backgroud(positive_tuple[0])
+        positive = self.p.add_eyeptach(out)
+        
+        out = self.p.subtract_backgroud(negative_tuple[0])
+        negative = self.p.add_eyeptach(out)
+
+        anchor = cv2.cvtColor(anchor,cv2.COLOR_BGR2RGB)
+        positive = cv2.cvtColor(positive,cv2.COLOR_BGR2RGB)
+        negative = cv2.cvtColor(negative,cv2.COLOR_BGR2RGB)
+        
+        anchor = Image.fromarray(anchor)
+        positive = Image.fromarray(positive)
+        negative = Image.fromarray(negative)
 
         transform=transforms.Compose([transforms.ToTensor()])
 
