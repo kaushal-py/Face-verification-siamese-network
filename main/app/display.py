@@ -240,15 +240,11 @@ def processing():
 
     # match = [match_dist, match_pre, match_post] 
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
-    # post_match = [post_match_dist,post_match_img,post_match_old]
-    match_len = len(match[0])
-    pre_len = len(pre_match[0])
-    post_len = len(post_match[0])
-    cnt_pre_list = [cnt_pre_name, cnt_pre_cnt]
-    cnt_post_list = [cnt_post_name, cnt_post_cnt]
-    # shutil.rmtree(dirpre)
-    # shutil.rmtree(dirpost)
-    return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
+    post_match = [post_match_dist,post_match_img,post_match_old]
+    
+    shutil.rmtree(dirpre)
+    shutil.rmtree(dirpost)
+    return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
 
 @app.route("/upload-directory", methods=['POST'])
 def upload_directory():
