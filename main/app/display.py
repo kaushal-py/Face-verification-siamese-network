@@ -26,17 +26,32 @@ pre_path = "static/upload/pre/temp"
 post_path = "static/upload/post/temp"
 
 # Load model
-# net = torch.load('model.pt', map_location = lambda storage, loc:storage).eval()
-# net_pre = torch.load('../models/model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
-# net_post = torch.load('../models/model_duplicate_post.pt', map_location = lambda storage, loc:storage).eval()
-# net = torch.load('../models/model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
-net_pre = torch.load('../models/model_duplicate_pre.pt').cuda()
-net_post = torch.load('../models/model_duplicate_post.pt').cuda()
-net = torch.load('../models/model_duplicate_post.pt').cuda()
 
-# @app.route("/")
-# def display():
-#     return render_template('/display-directory.html')
+# net_pre = torch.load('../models/model_triplet_pr3.pt', map_location = lambda storage, loc:storage).eval()
+# net_post = torch.load('../models/model_triplet_pr3.pt', map_location = lambda storage, loc:storage).eval()
+# net = torch.load('../models/model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
+
+net_pre = torch.load('../models/model_triplet_pr3.pt').cuda()
+net_post = torch.load('../models/model_triplet_pr3.pt').cuda()
+net = torch.load('../models/model_duplicate_pre.pt').cuda()
+
+match_dist = []
+match_pre = []
+match_post = []
+pre_match_img = []
+pre_match_dist = []
+pre_match_old = []
+post_match_img = []
+post_match_dist = []
+post_match_old = []
+
+cnt_pre_cnt = []
+cnt_pre_name = []
+cnt_post_cnt = []
+cnt_post_name = []
+
+img_output_pre = []
+img_output_post = []
 
 @app.route("/display-single")
 def display():
@@ -45,8 +60,33 @@ def display():
 @app.route("/")
 def display_directory():
     return render_template('/display-directory.html')
+    
+@app.route("/result-directory")
+def result_directory():
+    match = [match_dist, match_pre, match_post] 
+    pre_match = [pre_match_dist,pre_match_img,pre_match_old]
+    post_match = [post_match_dist,post_match_img,post_match_old]
+    return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
 
 def processing():
+
+    del match_dist[:]
+    del match_pre[:]
+    del match_post[:]
+    del pre_match_img[:]
+    del pre_match_dist[:]
+    del pre_match_old[:]
+    del post_match_img[:]
+    del post_match_dist[:]
+    del post_match_old[:]
+
+    del cnt_pre_cnt[:]
+    del cnt_pre_name[:]
+    del cnt_post_cnt[:]
+    del cnt_post_name[:]
+
+    del img_output_pre[:]
+    del img_output_post[:]
 
     pref = os.path.join(pre_path, "pre-directory.zip")
     postf = os.path.join(post_path, "pre-directory.zip")
@@ -107,28 +147,9 @@ def processing():
                         num_workers=4,
                         batch_size=1)
 
-    match_dist = []
-    match_pre = []
-    match_post = []
-    pre_match_img = []
-    pre_match_dist = []
-    pre_match_old = []
-    post_match_img = []
-    post_match_dist = []
-    post_match_old = []
-
-    cnt_pre_cnt = []
-    cnt_pre_name = []
-    cnt_post_cnt = []
-    cnt_post_name = []
-
-
     data_iter_pre = iter(dataloader_pre)
     data_iter_post = iter(dataloader_post)
     data_iter = iter(dataloader)
-
-    img_output_pre = []
-    img_output_post = []
 
     csv_pre = open("static/pre_values.csv",'a')
     csv_post = open("static/post_values.csv",'a')
@@ -266,15 +287,11 @@ def processing():
 
         shutil.rmtree(dirpre + "/" + str(x))
         shutil.rmtree(dirpost + "/" + str(x))
-
-    match = [match_dist, match_pre, match_post] 
-    pre_match = [pre_match_dist,pre_match_img,pre_match_old]
-
-    post_match = [post_match_dist,post_match_img,post_match_old]
     
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
-    return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
+
+    socketio.emit('result', {'result' : True})
 
 @app.route("/upload-directory", methods=['POST'])
 def upload_directory():
