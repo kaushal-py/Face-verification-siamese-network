@@ -15,6 +15,7 @@ import os
 import pandas as pd
 import shutil
 from flask_socketio import SocketIO, send
+import _thread
 
 app = Flask(__name__)
 app.config['CACHE_TYPE'] = "null"
@@ -45,7 +46,6 @@ def display():
 def display_directory():
     return render_template('/display-directory.html')
 
-@app.route("/processing")
 def processing():
 
     pref = os.path.join(pre_path, "pre-directory.zip")
@@ -132,19 +132,21 @@ def processing():
 
     csv_pre = open("static/pre_values.csv",'a')
     csv_post = open("static/post_values.csv",'a')
-    
+
+    # for x in range(len(listpre)):
+
+    #     Check Photoshop
+
+    #     cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
+    #     if cnt_pre > 100:
+    #         cnt_pre_cnt.append(cnt_pre)
+    #         cnt_pre_name.append(listpre[x][:24])
+
+    #     if cnt_post > 100:
+    #         cnt_post_cnt.append(cnt_post)
+    #         cnt_post_name.append(listpost[x][:24])
 
     for x in range(len(listpre)):
-
-        # cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
-        # if cnt_pre > 100:
-        #     cnt_pre_cnt.append(cnt_pre)
-        #     cnt_pre_name.append(listpre[x][:24])
-
-        # if cnt_post > 100:
-        #     cnt_post_cnt.append(cnt_post)
-        #     cnt_post_name.append(listpost[x][:24])
-
 
         (img0, img1) = next(data_iter_pre)
 
@@ -155,10 +157,14 @@ def processing():
         img1_output = img1_output.data.cpu().numpy()[0]
         output_pre = str(img1_output.tolist())[1:-1]
         csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
-        
+        img_name = "\nimages/pre/"+listpre[x]
 
         img0_output_pre = img0_output_pre.data.cpu().numpy()[0]
         img_output_pre.append(img0_output_pre)
+
+        socketio.emit('pre-model', {'pre_model_i' : x+1,
+                    'pre_model_img' : img_name, 
+                    'total' : len(listpre)})
     
     csv_pre.close()
     
@@ -174,8 +180,14 @@ def processing():
         output_post = str(img1_output.tolist())[1:-1]
         csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
 
+        img_name = "\nimages/post/"+listpost[x]
+
         img0_output_post = img0_output_post.data.cpu().numpy()[0]
         img_output_post.append(img0_output_post)
+
+        socketio.emit('post-model', {'post_model_i' : x+1,
+                    'post_model_img' : img_name,
+                    'total' : len(listpre)})
     
     csv_post.close()
 
@@ -196,6 +208,12 @@ def processing():
         match_pre.append("/images/pre/"+listpre[x])
         match_post.append("/images/post/"+listpost[x])
         match_dist.append(euclidean_distance)
+        
+        img_name = "\nimages/pre/"+listpre[x]
+
+        socketio.emit('pre-post-model', {'pp_model_i' : x+1,
+                    'pp_model_img' : img_name,
+                    'total' : len(listpre)})
     
     print("Done writing to csv")
     
@@ -215,6 +233,11 @@ def processing():
                 csv_img = open("static/images.csv",'a')
                 csv_img.write("\n/images/pre/"+listpre[x]+", "+str(1))
                 csv_img.close()
+
+        img_name = "/images/pre/"+listpre[x]
+        socketio.emit('pre-compare', {'pre_compare_i' : x+1,
+                    'pre_compare_img' : img_name,
+                    'total' : len(listpre)})
     
     print("Calculated pre embeddings")
 
@@ -231,23 +254,44 @@ def processing():
                 csv_img.write("\n/images/post/"+listpre[x]+", "+str(1))
                 csv_img.close()
 
-    # for x in range(0,len(listpre)):
-    #     os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
-    #     os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"static/images/post/"+listpost[x])
+        img_name = "/images/post/"+listpost[x]
+        socketio.emit('post-compare', {'post_compare_i' : x+1,
+                    'post_compare_img' : img_name,
+                    'total' : len(listpre)})
+        
 
-    #     shutil.rmtree(dirpre + "/" + str(x))
-    #     shutil.rmtree(dirpost + "/" + str(x))
+    for x in range(0,len(listpre)):
+        os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
+        os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"static/images/post/"+listpost[x])
 
-    # match = [match_dist, match_pre, match_post] 
+        shutil.rmtree(dirpre + "/" + str(x))
+        shutil.rmtree(dirpost + "/" + str(x))
+
+    print("idhar print hua 1")
+    match = [match_dist, match_pre, match_post] 
+    print("idhar print hua 2")
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
-    # post_match = [post_match_dist,post_match_img,post_match_old]
+    print("idhar print hua 3")
+    post_match = [post_match_dist,post_match_img,post_match_old]
+    print("idhar print hua 4")
     match_len = len(match[0])
+    print("idhar print hua 5")
     pre_len = len(pre_match[0])
+    print("idhar print hua 6")
     post_len = len(post_match[0])
+    print("idhar print hua 7")
     cnt_pre_list = [cnt_pre_name, cnt_pre_cnt]
+    print("idhar print hua 8")
     cnt_post_list = [cnt_post_name, cnt_post_cnt]
-    # shutil.rmtree(dirpre)
-    # shutil.rmtree(dirpost)
+    print("idhar print hua 9")    
+
+    shutil.rmtree(dirpre)
+    print("idhar print hua 10")
+    shutil.rmtree(dirpost)
+    print("idhar print hua 11")
+
+    
+
     return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
 
 @app.route("/upload-directory", methods=['POST'])
@@ -263,6 +307,7 @@ def upload_directory():
     pre.save(pref)
     post.save(postf)
 
+    _thread.start_new_thread(processing, ())
     return render_template("processing.html")
 
     

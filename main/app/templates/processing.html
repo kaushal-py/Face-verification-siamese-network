@@ -1,24 +1,82 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta http-equiv="refresh" content="0; url=/processing" />
-        <!-- Bootstrap CSS -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+{% extends "base.html" %}
 
-        <title>EYC Demo</title>
-        <style type="text/css">
-            body { background: #fafafa !important; } /* Adding !important forces the browser to overwrite the default style applied by Bootstrap */
-        </style>
-    </head>
+{% block content %}
 
     <body>
         <div class="container h-100">
             <div class="row h-100 justify-content-center align-items-center">
                 <img src="/static/loading.gif" alt="Processing">
             </div>
+            <br>
+            <div class="large" id="pre-model-text">Loading images to pre duplicates model : </div>
+            <div class="progress">
+                <div id = "pre-model" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <br>
+            <div class="large" id="post-model-text">Loading images to post duplicates model : </div>
+            <div class="progress">
+                <div id = "post-model" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <br>
+            <div class="large" id="pre-post-model-text">Loading images to pre post model : </div>
+            <div class="progress">
+                <div id = "pre-post-model" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <br>
+            <div class="large" id="pre-compare-text">Comparing pre images for duplicates : </div>
+            <div class="progress">
+                <div id = "pre-compare" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <br>
+            <div class="large" id="post-compare-text">Comparing post images for duplicates : </div>
+            <div class="progress">
+                <div id = "post-compare" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
         </div>
     </body>
-</html>
+
+    <script>
+        $(document).ready(function(){
+            var socket = io.connect('http://0.0.0.0:5000/');
+        
+            socket.on('pre-model', function(data){
+
+                $('#pre-model').attr('aria-valuenow', data.pre_model_i);
+                $('#pre-model').attr('style', "width:" + (data.pre_model_i*100)/data.total + "%");
+                $('#pre-model-text').html("Loading images to pre duplicates model : " + data.pre_model_img + " " + data.pre_model_i+"/"+data.total);
+
+            })
+            socket.on('post-model', function(data){
+                
+                $('#post-model').attr('aria-valuenow', data.post_model_i);
+                $('#post-model').attr('style', "width:" + (data.post_model_i*100)/data.total + "%");
+                $('#post-model-text').html("Loading images to post duplicates model : " + data.post_model_img + " " + data.post_model_i+"/"+data.total);
+
+            })
+            socket.on('pre-post-model', function(data){
+                
+                $('#pre-post-model').attr('aria-valuenow', data.pp_model_i);
+                $('#pre-post-model').attr('style', "width:" + (data.pp_model_i*100)/data.total + "%");
+                $('#pre-post-model-text').html("Loading images to pre post model : " + data.pp_model_img + " " + data.pp_model_i+"/"+data.total);
+
+            })
+            socket.on('pre-compare', function(data){
+                
+                $('#pre-compare').attr('aria-valuenow', data.pre_compare_i);
+                $('#pre-compare').attr('style', "width:" + (data.post_compare_i*100)/data.total + "%");
+                $('#pre-compare-text').html("Comparing pre images for duplicates : " + data.pre_compare_img + " " +data.pre_compare_i+"/"+data.total);
+
+            })
+            socket.on('post-compare', function(data){
+                
+                $('#post-compare').attr('aria-valuenow', data.post_compare_i);
+                $('#post-compare').attr('style', "width:" + (data.post_compare_i*100)/data.total + "%");
+                $('#post-compare-text').html("Comparing post images for duplicates : " + data.post_compare_img + " " + data.post_compare_i +"/"+data.total);
+
+            })
+
+            
+        })
+    </script>
+
+{% endblock %}
