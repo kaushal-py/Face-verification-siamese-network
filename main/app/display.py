@@ -26,11 +26,12 @@ post_path = "static/upload/post/temp"
 
 # Load model
 # net = torch.load('model.pt', map_location = lambda storage, loc:storage).eval()
-net_pre = torch.load('model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
-net_post = torch.load('model_duplicate_post.pt', map_location = lambda storage, loc:storage).eval()
-net = torch.load('model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
-# net_pre = torch.load('model_duplicate_pre.pt')
-# net_post = torch.load('model_duplicate_post.pt')
+# net_pre = torch.load('../models/model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
+# net_post = torch.load('../models/model_duplicate_post.pt', map_location = lambda storage, loc:storage).eval()
+# net = torch.load('../models/model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
+net_pre = torch.load('../models/model_duplicate_pre.pt').cuda()
+net_post = torch.load('../models/model_duplicate_post.pt').cuda()
+net = torch.load('../models/model_duplicate_post.pt').cuda()
 
 # @app.route("/")
 # def display():
@@ -129,54 +130,62 @@ def processing():
     img_output_pre = []
     img_output_post = []
 
+    csv_pre = open("static/pre_values.csv",'a')
+    csv_post = open("static/post_values.csv",'a')
+    
+
     for x in range(len(listpre)):
 
-        cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
-        if cnt_pre > 100:
-            cnt_pre_cnt.append(cnt_pre)
-            cnt_pre_name.append(listpre[x][:24])
+        # cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
+        # if cnt_pre > 100:
+        #     cnt_pre_cnt.append(cnt_pre)
+        #     cnt_pre_name.append(listpre[x][:24])
 
-        if cnt_post > 100:
-            cnt_post_cnt.append(cnt_post)
-            cnt_post_name.append(listpost[x][:24])
+        # if cnt_post > 100:
+        #     cnt_post_cnt.append(cnt_post)
+        #     cnt_post_name.append(listpost[x][:24])
 
 
         (img0, img1) = next(data_iter_pre)
 
         # Calculate distance
-        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
-        img0, img1 = Variable(img0), Variable(img1)
+        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img0, img1 = Variable(img0), Variable(img1)
         (img0_output_pre, img1_output)  = net_pre(img0, img1)
-        img1_output = img1_output.data.numpy()[0]
+        img1_output = img1_output.data.cpu().numpy()[0]
         output_pre = str(img1_output.tolist())[1:-1]
-        csv_pre = open("static/pre_values.csv",'a')
         csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
-        csv_pre.close()
+        
 
-        img0_output_pre = img0_output_pre.data.numpy()[0]
+        img0_output_pre = img0_output_pre.data.cpu().numpy()[0]
         img_output_pre.append(img0_output_pre)
-
+    
+    csv_pre.close()
+    
+    for x in range(len(listpre)):
 
         (img0, img1) = next(data_iter_post)
 
         # Calculate distance
-        img0, img1 = Variable(img0), Variable(img1)
-        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img0, img1 = Variable(img0), Variable(img1)
+        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         (img0_output_post, img1_output)  = net_post(img0, img1)
-        img1_output = img1_output.data.numpy()[0]
+        img1_output = img1_output.data.cpu().numpy()[0]
         output_post = str(img1_output.tolist())[1:-1]
-        csv_post = open("static/post_values.csv",'a')
         csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
-        csv_post.close()
 
-        img0_output_post = img0_output_post.data.numpy()[0]
+        img0_output_post = img0_output_post.data.cpu().numpy()[0]
         img_output_post.append(img0_output_post)
+    
+    csv_post.close()
+
+    for x in range(len(listpre)):
 
         (img0, img1) = next(data_iter)
 
         # Calculate distance
-        # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
-        img0, img1 = Variable(img0), Variable(img1)
+        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img0, img1 = Variable(img0), Variable(img1)
         # img0 = img0.unsqueeze(0)
         (img0_output, img1_output)  = net(img0, img1)
         
@@ -187,6 +196,8 @@ def processing():
         match_pre.append("/images/pre/"+listpre[x])
         match_post.append("/images/post/"+listpost[x])
         match_dist.append(euclidean_distance)
+    
+    print("Done writing to csv")
     
     # Read csv here
     df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
@@ -205,6 +216,8 @@ def processing():
                 csv_img.write("\n/images/pre/"+listpre[x]+", "+str(1))
                 csv_img.close()
     
+    print("Calculated pre embeddings")
+
     for x in range(0,len(img_output_post)):
         for y in range(0,df_post.count()[0]-1):
             get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
@@ -218,23 +231,23 @@ def processing():
                 csv_img.write("\n/images/post/"+listpre[x]+", "+str(1))
                 csv_img.close()
 
-    for x in range(0,len(listpre)):
-        os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
-        os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"static/images/post/"+listpost[x])
+    # for x in range(0,len(listpre)):
+    #     os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
+    #     os.rename(dirpost + "/" + str(x) + "/" + listpost[x],"static/images/post/"+listpost[x])
 
-        shutil.rmtree(dirpre + "/" + str(x))
-        shutil.rmtree(dirpost + "/" + str(x))
+    #     shutil.rmtree(dirpre + "/" + str(x))
+    #     shutil.rmtree(dirpost + "/" + str(x))
 
-    match = [match_dist, match_pre, match_post] 
+    # match = [match_dist, match_pre, match_post] 
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
-    post_match = [post_match_dist,post_match_img,post_match_old]
+    # post_match = [post_match_dist,post_match_img,post_match_old]
     match_len = len(match[0])
     pre_len = len(pre_match[0])
     post_len = len(post_match[0])
     cnt_pre_list = [cnt_pre_name, cnt_pre_cnt]
     cnt_post_list = [cnt_post_name, cnt_post_cnt]
-    shutil.rmtree(dirpre)
-    shutil.rmtree(dirpost)
+    # shutil.rmtree(dirpre)
+    # shutil.rmtree(dirpost)
     return render_template("result-directory.html", pre_match = pre_match, pre_len = pre_len, post_match = post_match, post_len = post_len, match = match, match_len = match_len, cnt_pre_list = cnt_pre_list, cnt_post_list = cnt_post_list, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
 
 @app.route("/upload-directory", methods=['POST'])
@@ -284,8 +297,8 @@ def upload():
 
 
     # Calculate distance
-    # img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
-    img0, img1 = Variable(img0), Variable(img1)
+    img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+    # img0, img1 = Variable(img0), Variable(img1)
     # img0 = img0.unsqueeze(0)
     (img0_output, img1_output)  = net(img0, img1)
         
