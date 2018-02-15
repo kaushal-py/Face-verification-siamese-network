@@ -27,12 +27,12 @@ post_path = "static/upload/post/temp"
 
 # Load model
 
-# net_pre = torch.load('../models/model_triplet_pr3.pt', map_location = lambda storage, loc:storage).eval()
-# net_post = torch.load('../models/model_triplet_pr3.pt', map_location = lambda storage, loc:storage).eval()
+# net_pre = torch.load('../models/model_triplet_pr_pr3.pt', map_location = lambda storage, loc:storage).eval()
+# net_post = torch.load('../models/model_triplet_pr_pr3.pt', map_location = lambda storage, loc:storage).eval()
 # net = torch.load('../models/model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
 
-net_pre = torch.load('../models/model_triplet_pr3.pt').cuda()
-net_post = torch.load('../models/model_triplet_pr3.pt').cuda()
+net_pre = torch.load('../models/model_triplet_pr_pr3.pt').cuda()
+net_post = torch.load('../models/model_triplet_pr_pr3.pt').cuda()
 net = torch.load('../models/model_duplicate_pre.pt').cuda()
 
 match_dist = []
@@ -63,7 +63,7 @@ def display_directory():
     
 @app.route("/result-directory")
 def result_directory():
-    match = [match_dist, match_pre, match_post] 
+    match = [match_dist, match_pre, match_post]
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
     return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
@@ -129,13 +129,13 @@ def processing():
         os.rename(dirpost+"/"+listpost[x],postf)
 
     # Load Images
-    dataset_pre = AppDatasetDuplicates(dirpre,dirpre,False)
+    dataset_pre = AppDatasetDuplicates(dirpre,dirpre,True)
     dataloader_pre = DataLoader(dataset_pre,
                         shuffle=False,
                         num_workers=4,
                         batch_size=1)
 
-    dataset_post = AppDatasetDuplicates(dirpost,dirpost,False)
+    dataset_post = AppDatasetDuplicates(dirpost,dirpost,True)
     dataloader_post = DataLoader(dataset_post,
                         shuffle=False,
                         num_workers=4,
@@ -174,7 +174,7 @@ def processing():
         # Calculate distance
         img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         # img0, img1 = Variable(img0), Variable(img1)
-        (img0_output_pre, img1_output)  = net_pre(img0, img1)
+        (img0_output_pre, img1_output, _)  = net_pre(img0, img1, img0)
         img1_output = img1_output.data.cpu().numpy()[0]
         output_pre = str(img1_output.tolist())[1:-1]
         csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
@@ -196,7 +196,7 @@ def processing():
         # Calculate distance
         # img0, img1 = Variable(img0), Variable(img1)
         img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
-        (img0_output_post, img1_output)  = net_post(img0, img1)
+        (img0_output_post, img1_output, _)  = net_post(img0, img1, img0)
         img1_output = img1_output.data.cpu().numpy()[0]
         output_post = str(img1_output.tolist())[1:-1]
         csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
@@ -246,7 +246,7 @@ def processing():
         for y in range(0,df_pre.count()[0]-1):
             get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img_output_pre[x] - get_val)
-            if euclidean_distance < 0.5:
+            if euclidean_distance < 0.1:
                 pre_match_dist.append(euclidean_distance)
                 pre_match_img.append("/images/pre/"+listpre[x])
                 pre_match_old.append(df_pre.iloc[y][0])
@@ -266,7 +266,7 @@ def processing():
         for y in range(0,df_post.count()[0]-1):
             get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img_output_post[x] - get_val)
-            if euclidean_distance < 1:
+            if euclidean_distance < 0.1:
                 post_match_dist.append(euclidean_distance)
                 post_match_img.append("/images/post/"+listpost[x])
                 post_match_old.append(df_post.iloc[y][0])
@@ -327,7 +327,7 @@ def upload():
     post.save(postf)
     
     # Check if image is Photoshopped
-    cnt_post, cnt_pre = checkPhotoshop()
+    cnt_post, cnt_pre = checkPhotoshop(pre_path, "PRE.jpg", post_path, "POST.jpg")
 
     # Load Images
     dataset = AppDataset()
@@ -345,18 +345,6 @@ def upload():
     # img0, img1 = Variable(img0), Variable(img1)
     # img0 = img0.unsqueeze(0)
     (img0_output, img1_output)  = net(img0, img1)
-        
-    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
-    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
-
-    img1_output_post = img1_output.data.numpy()[0]
-    img0_output_pre = img0_output.data.numpy()[0]
-
-    for y in range(0,df_post.count()[0]-1):
-        get_val_pre = df_pre.iloc[y][1:129].as_matrix(columns=None)
-        get_val_post = df_post.iloc[y][1:129].as_matrix(columns=None)
-        euclidean_distance_pre = np.linalg.norm(img0_output_pre - get_val_pre)
-        euclidean_distance_post = np.linalg.norm(img1_output_post - get_val_post)
     
     euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
