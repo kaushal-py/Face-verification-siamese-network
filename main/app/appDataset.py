@@ -5,6 +5,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 import torch
 import numpy as np
+from eye_detector import Preprocess
 
 class AppDataset(Dataset):
 
@@ -12,6 +13,8 @@ class AppDataset(Dataset):
 
         self.dataset_pre = dset.ImageFolder(root="static/upload/pre")
         self.dataset_post = dset.ImageFolder(root="static/upload/post")
+
+        self.p = Preprocess("static/haarcascades_eye.xml", "static/patch.jpg")
 
         self.number_of_images = len(self.dataset_pre.imgs)
 
@@ -21,23 +24,32 @@ class AppDataset(Dataset):
     def __getitem__(self, idx):
         
         # Anchor
-        img0_tuple = self.dataset_pre.imgs[idx]
-        img1_tuple = self.dataset_post.imgs[idx]
+        anchor_tuple = self.dataset_pre.imgs[idx]
+        positive_tuple = self.dataset_post.imgs[idx]
         
-        assert img1_tuple[1] == img0_tuple[1]
+        anchor = self.p.subtract_backgroud(anchor_tuple[0])
+        positive = self.p.subtract_backgroud(positive_tuple[0])
+        # positive = self.p.add_eyeptach(positive)
 
-        img0 = Image.open(img0_tuple[0]).resize((50,50),Image.NEAREST)
-        img1 = Image.open(img1_tuple[0]).resize((50,50),Image.NEAREST)
+        anchor = cv2.cvtColor(anchor,cv2.COLOR_BGR2RGB)
+        positive = cv2.cvtColor(positive,cv2.COLOR_BGR2RGB)
         
+        anchor = Image.fromarray(anchor)
+        positive = Image.fromarray(positive)
+
         transform=transforms.Compose([transforms.ToTensor()])
 
-        img0 = img0.convert("L")
-        img1 = img1.convert("L")
+        anchor = anchor.convert("L")
+        positive = positive.convert("L")
 
-        img0 = transform(img0)
-        img1 = transform(img1)
+        # anchor = anchor.resize((216, 216), Image.ANTIALIAS)
+        # positive = positive.resize((216, 216), Image.ANTIALIAS)
+        # negative = negative.resize((216, 216), Image.ANTIALIAS)
 
-        return img0, img1
+        anchor = transform(anchor)
+        positive = transform(positive)
+        
+        return anchor, positive
     
     
 if __name__ == "__main__":

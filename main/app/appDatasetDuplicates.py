@@ -36,9 +36,7 @@ class AppDatasetDuplicates(Dataset):
         positive_tuple = self.dataset_pre.imgs[idx]
 
         anchor = self.p.subtract_backgroud(anchor_tuple[0])
-        if(self.pp):
-            anchor = self.p.add_eyeptach(anchor)
-
+        
         positive = self.p.subtract_backgroud(positive_tuple[0])
         # positive = self.p.add_eyeptach(positive)
 
