@@ -199,5 +199,15 @@ def augmentpage():
     image_set = [ 'static/eycdata/augmented/post/'+img_class+'/'+image for image in image_set]
     return render_template("augment.html", images=image_set)
 
+@app.route('/preprocess')
+def preprocesspage():
+    class_set = sorted(os.listdir('static/eycdata/preprocess/'))
+    # print(img_set)
+    img_class = random.choice(class_set)
+    image_set = sorted(os.listdir('static/eycdata/preprocess/'+img_class))
+
+    image_set = [ 'static/eycdata/augmented/post/'+img_class+'/'+image for image in image_set]
+    return render_template("preprocess.html", images=image_set)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8000, debug=True)
