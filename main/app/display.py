@@ -48,8 +48,10 @@ post_match_old = []
 
 cnt_pre_cnt = []
 cnt_pre_name = []
+cnt_pre_ela = []
 cnt_post_cnt = []
 cnt_post_name = []
+cnt_post_ela = []
 
 @app.route("/display-single")
 def display():
@@ -64,7 +66,7 @@ def result_directory():
     match = [match_dist, match_pre, match_post]
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
-    return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
+    return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name, ps_pre_ela = cnt_pre_ela, ps_post_ela = cnt_post_ela)
 
 def processing_pre(dirpre,listpre):
     dataset_pre = AppDatasetDuplicates(dirpre,dirpre,False)
@@ -201,8 +203,10 @@ def processing():
 
     del cnt_pre_cnt[:]
     del cnt_pre_name[:]
+    del cnt_pre_ela[:]
     del cnt_post_cnt[:]
     del cnt_post_name[:]
+    del cnt_post_ela[:]
 
     pref = os.path.join(pre_path, "pre-directory.zip")
     postf = os.path.join(post_path, "pre-directory.zip")
@@ -301,12 +305,16 @@ def processing():
 
         cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
         if cnt_pre > 100:
+            os.rename(dirpre + "/" + str(x) + "/" + "PRE-ELA.jpg","static/images/pre/"+ "ELA_"+listpre[x])
             cnt_pre_cnt.append(cnt_pre)
             cnt_pre_name.append("static/images/pre/"+listpre[x])
+            cnt_pre_ela.append("static/images/pre/"+ "ELA_"+listpre[x])
 
         if cnt_post > 100:
+            os.rename(dirpost + "/" + str(x) + "/" + "POST-ELA.jpg","static/images/post/"+ "ELA_"+listpost[x])
             cnt_post_cnt.append(cnt_post)
             cnt_post_name.append("static/images/post/"+listpost[x])
+            cnt_post_ela.append("static/images/post/"+ "ELA_"+listpost[x])
             
         socketio.emit('ps', {'i' : x+1,
                     'img_name' : img_name,
