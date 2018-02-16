@@ -4,14 +4,13 @@
 <h1 class="m-3 text-center">Preprocessing</h1>
 <br>
 <meta http-equiv="refresh" content="3">
-<div class="text-center">
-<div class="row">
-{% for image in images %}'
-    <div class="col-md-6">
-        <img class="img-thumbnail m-2" src="{{image}}" alt="">
+<div class="row p-0 text-center">
+{% for image_set in images %}'
+    <div class="col-sm">
+        <img class="img-thumbnail" src="{{image_set[1]}}" alt="">
+        <img class="img-thumbnail" src="{{image_set[0]}}" alt="">
     </div>
 {% endfor %}
-</div>
 </div>
 
 {% endblock %}

@@ -37,23 +37,23 @@ class SiameseNetwork(nn.Module):
 
             nn.MaxPool2d(3, stride=2)    ,
         
-            nn.ReflectionPad2d(1),
-            nn.Conv2d(32, 64, kernel_size=3),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm2d(64),
-            nn.Dropout2d(p=.3),         
+            # nn.ReflectionPad2d(1),
+            # nn.Conv2d(32, 64, kernel_size=3),
+            # nn.ReLU(inplace=True),
+            # nn.BatchNorm2d(64),
+            # nn.Dropout2d(p=.3),         
         )
 
         self.fc1 = nn.Sequential(
-            nn.Linear(64*13*13, 1024),
+            nn.Linear(32*13*13, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.4),
 
-            nn.Linear(1024, 512),
+            nn.Linear(512, 256),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
 
-            nn.Linear(512, 128))
+            nn.Linear(256, 128))
 
     def forward(self, anchor_input, pos_input, neg_input):
         
