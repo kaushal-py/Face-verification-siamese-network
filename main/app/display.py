@@ -34,7 +34,7 @@ post_path = "static/upload/post/temp"
 
 net_pre = torch.load('../models/model_triplet_pr_pr_max_pool_1000.pt').cuda()
 net_post = torch.load('../models/model_triplet_po_po_max_pool_1000.pt').cuda()
-net = torch.load('../models/model_triplet_po_po_max_pool_1000.pt').cuda()
+net = torch.load('../models/model_triplet_pr_po_max_pool_1000_2.pt').cuda()
 
 match_dist = []
 match_pre = []
@@ -161,6 +161,7 @@ def processing_post(dirpost,listpost):
             get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img0_output_post - get_val)
             if euclidean_distance < 0.6:
+                matches += 1
                 if euclidean_distance < min_dist:
                     min_dist = euclidean_distance
                     min_new = "/images/post/"+listpost[x]
