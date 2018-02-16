@@ -98,7 +98,7 @@ if __name__ == "__main__":
     class_set = sorted(os.listdir('static/eycdata/pre/'))
     # print(img_set)
 
-    os.mkdir('static/eycdata/preprocessed')
+    # os.mkdir('static/eycdata/preprocessed')
 
     for img_class in class_set:
 
@@ -106,14 +106,17 @@ if __name__ == "__main__":
         
         image_url = 'static/eycdata/pre/'+img_class + '/' + image_name
         
-        os.mkdir('static/eycdata/preprocessed/' + img_class)
+        # os.mkdir('static/eycdata/preprocessed/' + img_class)
 
-        out = p.subtract_backgroud(image_url)
-        out_url = 'static/eycdata/preprocessed/'+img_class + '/1.jpg'
-        print(out_url)
-        cv2.imwrite(out_url, out)
+        img = cv2.imread(image_url)
+        img = cv2.resize(img, (225, 225))
+
+        # out = p.subtract_backgroud(image_url)
+        out_url = 'static/eycdata/preprocessed/'+img_class + '/0.jpg'
+        # print(out_url)
+        cv2.imwrite(out_url, img)
         
-        out_sub = p.add_eyeptach(out)
-        out_sub_url = 'static/eycdata/preprocessed/'+img_class + '/2.jpg'
-        cv2.imwrite(out_sub_url, out_sub)
+        # out_sub = p.add_eyeptach(out)
+        # out_sub_url = 'static/eycdata/preprocessed/'+img_class + '/2.jpg'
+        # cv2.imwrite(out_sub_url, out_sub)
         

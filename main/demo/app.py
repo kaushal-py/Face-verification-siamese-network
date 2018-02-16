@@ -14,6 +14,8 @@ import random
 import time
 import _thread
 
+from siamese import SiameseNetwork
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
@@ -33,7 +35,7 @@ dataloader_post = DataLoader(dataset_post,
 
 print("Loading models.. ")
 net_pre = torch.load('../models/model_triplet_pr_pr3.pt').eval()
-net_pre_post = torch.load('../models/model_triplet_pr_po_max_pool_large_600.pt').eval()
+net_pre_post = torch.load('../models/model_triplet_pr_po_max_pool_1000_2.pt').eval()
 print("Models loaded")
 
 @app.route('/')
@@ -81,7 +83,7 @@ def pre_post_comparisons(wait_time):
             # print(same_distance, diff_distance)
             
             # print(anchor_tuple)
-            probability = 0
+            probability = 1
             if probability == 0:
                 if same_distance < 0.9:
                     color = "green"      
@@ -91,7 +93,7 @@ def pre_post_comparisons(wait_time):
                                     'img0': anchor_tuple, 
                                     'img1': positive_tuple})
             else:
-                if diff_distance > 0.9:
+                if diff_distance < 0.9:
                     color = "danger"      
                 else:
                     color = "green"
@@ -169,20 +171,24 @@ def triplet():
         same_distance = F.pairwise_distance(anchor_output, positive_output)
         diff_distance = F.pairwise_distance(anchor_output, negative_output)
          
-        same_distance = str(same_distance.data.cpu().numpy()[0][0])
-        same_distance = same_distance[:4]
+        same_distance = same_distance.data.cpu().numpy()[0][0]
+        diff_distance = diff_distance.data.cpu().numpy()[0][0]
 
-        diff_distance = str(diff_distance.data.cpu().numpy()[0][0])
-        diff_distance = diff_distance[:4]
+        if same_distance < 0.9 and diff_distance > 0.9:
 
-        time.sleep(3)
+            same_distance = str(same_distance)
+            same_distance = same_distance[:4]
 
-        socketio.emit('vector', {'img_a' : anchor_tuple,
-                    'img_p' : positive_tuple, 
-                    'img_n' : negative_tuple, 
-                    'same_distance' : same_distance,
-                    'diff_distance' : diff_distance})
+            diff_distance = str(diff_distance)
+            diff_distance = diff_distance[:4]
 
+            time.sleep(3)
+
+            socketio.emit('vector', {'img_a' : anchor_tuple,
+                        'img_p' : positive_tuple, 
+                        'img_n' : negative_tuple, 
+                        'same_distance' : same_distance,
+                        'diff_distance' : diff_distance})
 
 
 @app.route('/tripletpairs')
@@ -216,13 +222,33 @@ def augmentpage():
 
 @app.route('/preprocess')
 def preprocesspage():
-    class_set = sorted(os.listdir('static/eycdata/preprocess/'))
+    class_set = sorted(os.listdir('static/eycdata/preprocessed/'))
     # print(img_set)
-    img_class = random.choice(class_set)
-    image_set = sorted(os.listdir('static/eycdata/preprocess/'+img_class))
+    image_set_set = []
 
-    image_set = [ 'static/eycdata/augmented/post/'+img_class+'/'+image for image in image_set]
-    return render_template("preprocess.html", images=image_set)
+    for i in range(3):
+        img_class = random.choice(class_set)
+        image_set = sorted(os.listdir('static/eycdata/preprocessed/'+img_class))
+        
+        image_set = [ 'static/eycdata/preprocessed/'+img_class+'/'+image for image in image_set]
+
+        image_set_set.append(image_set)
+    return render_template("preprocess.html", images=image_set_set)
+
+@app.route('/eyepatch')
+def eyepatchpage():
+    class_set = sorted(os.listdir('static/eycdata/preprocessed/'))
+    # print(img_set)
+    image_set_set = []
+
+    for i in range(3):
+        img_class = random.choice(class_set)
+        image_set = sorted(os.listdir('static/eycdata/preprocessed/'+img_class))
+        
+        image_set = [ 'static/eycdata/preprocessed/'+img_class+'/'+image for image in image_set]
+
+        image_set_set.append(image_set)
+    return render_template("preprocess.html", images=image_set_set)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    app.run(host='0.0.0.0', port=8000)
