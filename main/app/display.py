@@ -32,9 +32,9 @@ post_path = "static/upload/post/temp"
 # net_post = torch.load('../models/model_triplet_pr_pr3.pt', map_location = lambda storage, loc:storage).eval()
 # net = torch.load('../models/model_duplicate_pre.pt', map_location = lambda storage, loc:storage).eval()
 
-net_pre = torch.load('../models/model_triplet_pr_pr3.pt').cuda()
-net_post = torch.load('../models/model_triplet_pr_pr3.pt').cuda()
-net = torch.load('../models/model_duplicate_pre.pt').cuda()
+net_pre = torch.load('../models/model_triplet_pr_pr_max_pool_1000.pt').cuda()
+net_post = torch.load('../models/model_triplet_po_po_max_pool_1000.pt').cuda()
+net = torch.load('../models/model_triplet_po_po_max_pool_1000.pt').cuda()
 
 match_dist = []
 match_pre = []
@@ -67,10 +67,10 @@ def result_directory():
     return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
 
 def processing_pre(dirpre,listpre):
-    dataset_pre = AppDatasetDuplicates(dirpre,dirpre,True)
+    dataset_pre = AppDatasetDuplicates(dirpre,dirpre,False)
     dataloader_pre = DataLoader(dataset_pre,
                         shuffle=False,
-                        num_workers=4,
+                        num_workers=1,
                         batch_size=1)
 
     data_iter_pre = iter(dataloader_pre)
@@ -92,17 +92,28 @@ def processing_pre(dirpre,listpre):
 
         img0_output_pre = img0_output_pre.data.cpu().numpy()[0]
 
+        min_old = ""
+        min_dist = 99
+        min_new = ""
+        matches = 0
+
         for y in range(0,df_pre.count()[0]-1):
             get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img0_output_pre - get_val)
-            if euclidean_distance < 0.1:
-                pre_match_dist.append(euclidean_distance)
-                pre_match_img.append("/images/pre/"+listpre[x])
-                pre_match_old.append(df_pre.iloc[y][0])
+            if euclidean_distance < 0.6:
+                matches += 1
+                if euclidean_distance < min_dist:
+                    min_dist = euclidean_distance
+                    min_new = "/images/pre/"+listpre[x]
+                    min_old = df_pre.iloc[y][0]
             else :
                 csv_img = open("static/images.csv",'a')
                 csv_img.write("\n/images/pre/"+listpre[x]+", "+str(1))
                 csv_img.close()
+        if matches > 0:
+            pre_match_dist.append(min_dist)
+            pre_match_img.append(min_new)
+            pre_match_old.append(min_old)
 
         csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
         img_name = "\nimages/pre/"+listpre[x]
@@ -115,10 +126,10 @@ def processing_pre(dirpre,listpre):
 
 def processing_post(dirpost,listpost):
 
-    dataset_post = AppDatasetDuplicates(dirpost,dirpost,True)
+    dataset_post = AppDatasetDuplicates(dirpost,dirpost,False)
     dataloader_post = DataLoader(dataset_post,
                         shuffle=False,
-                        num_workers=4,
+                        num_workers=1,
                         batch_size=1)
 
     data_iter_post = iter(dataloader_post)
@@ -140,17 +151,31 @@ def processing_post(dirpost,listpost):
 
         img0_output_post = img0_output_post.data.cpu().numpy()[0]
 
+
+        min_old = ""
+        min_dist = 99
+        min_new = ""
+        matches = 0
+
         for y in range(0,df_post.count()[0]-1):
             get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
             euclidean_distance = np.linalg.norm(img0_output_post - get_val)
-            if euclidean_distance < 0.1:
-                post_match_dist.append(euclidean_distance)
-                post_match_img.append("/images/post/"+listpost[x])
-                post_match_old.append(df_post.iloc[y][0])
+            if euclidean_distance < 0.6:
+                if euclidean_distance < min_dist:
+                    min_dist = euclidean_distance
+                    min_new = "/images/post/"+listpost[x]
+                    min_old = df_post.iloc[y][0]
             else :
                 csv_img = open("static/images.csv",'a')
                 csv_img.write("\n/images/post/"+listpost[x]+", "+str(1))
                 csv_img.close()
+
+        if matches > 0:
+            post_match_dist.append(min_dist)
+            post_match_img.append(min_new)
+            post_match_old.append(min_old)
+
+
 
         csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
 
@@ -227,7 +252,7 @@ def processing():
         os.rename(dirpre+"/"+listpre[x],pref)
         os.rename(dirpost+"/"+listpost[x],postf)
 
-    dataset = AppDatasetDuplicates(dirpre,dirpost,False)
+    dataset = AppDatasetDuplicates(dirpre,dirpost,True)
     dataloader = DataLoader(dataset,
                         shuffle=False,
                         num_workers=4,
@@ -243,13 +268,13 @@ def processing():
         img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
         # img0, img1 = Variable(img0), Variable(img1)
         # img0 = img0.unsqueeze(0)
-        (img0_output, img1_output)  = net(img0, img1)
+        (img0_output, img1_output, _)  = net(img0, img1, img0)
         
         euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
         euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
         
-        if euclidean_distance < 0.2:
+        if euclidean_distance < 0.6:
             match_pre.append("/images/pre/"+listpre[x])
             match_post.append("/images/post/"+listpost[x])
             match_dist.append(euclidean_distance)
@@ -263,14 +288,14 @@ def processing():
     pre = Thread(target=processing_pre,args=(dirpre,listpre))
     post = Thread(target=processing_post,args=(dirpost,listpost))
 
-    pre.start()
     post.start()
+    pre.start()
 
     # _thread.start_new_thread(processing_pre, ())
     # _thread.start_new_thread(processing_post, ())
 
-    pre.join()
     post.join()
+    pre.join()
 
     for x in range(10):
 
