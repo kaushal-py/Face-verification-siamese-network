@@ -93,11 +93,22 @@ class Preprocess():
         return img_bg
 
 if __name__ == "__main__":
-    p = Preprocess("haarcascades_eye.xml", "patch.jpg")
-    out = p.subtract_backgroud("/mnt/Data/Code/deep-blue/EYC3PDBS3/main/.eycdata/pre/Person-F240445/PRE_F240445_23_21_R.jpg")
+    p = Preprocess("static/haarcascades_eye.xml", "static/patch.jpg")
 
-    out_sub = p.add_eyeptach(out)
+    class_set = sorted(os.listdir('static/eycdata/pre/'))
+    # print(img_set)
 
-    cv2.imshow('img',out_sub)
-    key = cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    for img_class in class_set:
+
+        image_name = os.listdir('static/eycdata/pre/'+img_class)[0]
+        
+        image_url = 'static/eycdata/pre/'+img_class + '/' + image_name
+        
+        out = p.subtract_backgroud(image_url)
+        out_url = 'static/eycdata/preprocessed'+img_class + '1.jpg'
+        cv2.imwrite(out_url, out)
+        
+        out_sub = p.add_eyeptach(out)
+        out_sub_url = 'static/eycdata/preprocessed'+img_class + '2.jpg'
+        cv2.imwrite(out_sub_url, out_sub)
+        print("done")
