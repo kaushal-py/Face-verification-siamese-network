@@ -21,6 +21,7 @@
         
         {% if pre_match[0]|length > 0 %}
         <div class="alert alert-info rounded-bottom m-0 rounded-top-0 " role="alert">
+            Number of flagged results : {{pre_match[0]|length}}<br>
             Kindly Accept if you find them to be OK, Reject if you find them to be the same people
         </div>
         <div class="row">
@@ -68,6 +69,7 @@
         
         {% if post_match[0]|length > 0 %}
         <div class="alert alert-info m-0" role="alert">
+            Number of flagged results : {{post_match[0]|length}}<br>
             Kindly Accept if you find them to be OK, Reject if you find them to be the same people
         </div>
         <div class="row">
@@ -115,6 +117,7 @@
         
         {% if match[0]|length > 0 %}
         <div class="alert alert-info m-0" role="alert">
+            Number of flagged results : {{match[0]|length}}<br>
             Kindly Accept if you find them to be OK, Reject if you find them to be the same people
         </div>
         <div class="row">
@@ -174,7 +177,7 @@
                         </div>
                         <div class="row card-body">
                             <div class="col-sm text-center">
-                                <img height="140" width="140" src="static/images/post/{{ps_post[t] }}">    
+                                <img height="140" width="140" src="{{ps_post[t] }}">    
                             </div>
                         </div>
                         <div class="card-footer text-muted">
@@ -200,7 +203,7 @@
                         </div>
                         <div class="row card-body">
                             <div class="col-sm text-center">
-                                <img height="140" width="140" src="static/images/pre/{{ps_pre[t] }}">    
+                                <img height="140" width="140" src="{{ps_pre[t] }}">    
                             </div>
                         </div>
                         <div class="card-footer text-muted">

@@ -161,11 +161,11 @@ def processing():
     #     cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
     #     if cnt_pre > 100:
     #         cnt_pre_cnt.append(cnt_pre)
-    #         cnt_pre_name.append(listpre[x][:24])
+    #         cnt_pre_name.append("static/images/pre/"+listpre[x])
 
     #     if cnt_post > 100:
     #         cnt_post_cnt.append(cnt_post)
-    #         cnt_post_name.append(listpost[x][:24])
+    #         cnt_post_name.append("static/images/post/"+listpost[x])
 
     for x in range(len(listpre)):
 
