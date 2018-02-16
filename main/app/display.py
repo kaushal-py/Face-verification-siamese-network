@@ -225,10 +225,11 @@ def processing():
         euclidean_distance = F.pairwise_distance(img0_output, img1_output)
 
         euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
-
-        match_pre.append("/images/pre/"+listpre[x])
-        match_post.append("/images/post/"+listpost[x])
-        match_dist.append(euclidean_distance)
+        
+        if euclidean_distance < 0.2:
+            match_pre.append("/images/pre/"+listpre[x])
+            match_post.append("/images/post/"+listpost[x])
+            match_dist.append(euclidean_distance)
         
         img_name = "\nimages/pre/"+listpre[x]
 
