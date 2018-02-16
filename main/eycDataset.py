@@ -9,6 +9,8 @@ from PIL import Image
 from PIL import ImageOps
 import torchvision.transforms as transforms
 from config import Config
+from eye_detector import Preprocess
+import cv2
 
 class EycDataset(Dataset):
     """
@@ -42,26 +44,25 @@ class EycDataset(Dataset):
             eyc_tar.extractall(self.dataset_folder_name)
             print("Done extracting files to ", self.dataset_folder_name)
 
-            # for file in os.listdir(".eycdata/pre"):
-            #     foldername = ".eycdata/pre/"+file[4:-4]
-            #     os.mkdir(foldername)
-            #     os.rename(".eycdata/pre/" + file, foldername+"/"+file)
+            for file in os.listdir(".eycdata/pre"):
+                foldername = ".eycdata/pre/"+file[4:-4]
+                os.mkdir(foldername)
+                os.rename(".eycdata/pre/" + file, foldername+"/"+file)
             
-            # for file in os.listdir(".eycdata/post"):
-            #     foldername = ".eycdata/post/"+file[5:-4]
-            #     os.mkdir(foldername)
-            #     os.rename(".eycdata/post/" + file, foldername+"/"+file)
+            for file in os.listdir(".eycdata/post"):
+                foldername = ".eycdata/post/"+file[5:-4]
+                os.mkdir(foldername)
+                os.rename(".eycdata/post/" + file, foldername+"/"+file)
             
             # Get pre and post image files from the directory
-            import eye_detector
 
-            data_pre = sorted(os.listdir(".eycdata/patch"))
-            data_post = sorted(os.listdir(".eycdata/postbg"))
+            data_pre = sorted(os.listdir(".eycdata/pre"))
+            data_post = sorted(os.listdir(".eycdata/post"))
 
-            # Randomize the data
-            data_pair = list(zip(data_pre, data_post))
-            random.shuffle(data_pair)
-            data_pre, data_post = zip(*data_pair)
+            # # Randomize the data
+            # data_pair = list(zip(data_pre, data_post))
+            # random.shuffle(data_pair)
+            # data_pre, data_post = zip(*data_pair)
 
             # Split into training and testing sets
             data_pre_train = data_pre[:self.train_size]
@@ -71,10 +72,10 @@ class EycDataset(Dataset):
 
             print("Making training and test data..")
 
-            self.moveToFolder(".eycdata/patch", data_pre_train, ".eycdata/train/pre")
-            self.moveToFolder(".eycdata/patch", data_pre_test, ".eycdata/test/pre")
-            self.moveToFolder(".eycdata/postbg", data_post_train, ".eycdata/train/post")
-            self.moveToFolder(".eycdata/postbg", data_post_test, ".eycdata/test/post")
+            self.moveToFolder(".eycdata/pre", data_pre_train, ".eycdata/train/pre")
+            self.moveToFolder(".eycdata/pre", data_pre_test, ".eycdata/test/pre")
+            self.moveToFolder(".eycdata/post", data_post_train, ".eycdata/train/post")
+            self.moveToFolder(".eycdata/post", data_post_test, ".eycdata/test/post")
 
         else:
             print("Data folder already created.")
@@ -91,8 +92,10 @@ class EycDataset(Dataset):
             self.dataset_post = dset.ImageFolder(root=Config.training_dir_post)
             
         else:
-            self.dataset_pre = dset.ImageFolder(root=Config.testing_dir_pre)
+            self.dataset_pre = dset.ImageFolder(root=Config.training_dir_pre)
             self.dataset_post = dset.ImageFolder(root=Config.testing_dir_post)
+
+        self.p = Preprocess("haarcascades_eye.xml", "patch.jpg")
 
         self.number_of_images = len(self.dataset_pre)
 
@@ -110,12 +113,11 @@ class EycDataset(Dataset):
         
         if self.train:
             similar_idx = (idx//20 * 20) + random.randint(0, 19)
-            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5) + random.randint(0, 19))%16000
+            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 3) + random.randint(0, 19))%20000
         else:
             similar_idx = idx
-            diff_idx = ((idx//20 * 20) + 20*random.randint(1, 5) + random.randint(0, 19))%200
+            diff_idx = random.randint(0, 250*20)
             
-
         if  probability < 50:
             anchor_tuple = self.dataset_pre.imgs[idx]
             
@@ -150,9 +152,22 @@ class EycDataset(Dataset):
         #         if anchor_tuple[1] != negative_tuple[1]:
         #             break
 
-        anchor = Image.open(anchor_tuple[0])
-        positive = Image.open(positive_tuple[0])
-        negative = Image.open(negative_tuple[0])
+        anchor = self.p.subtract_backgroud(anchor_tuple[0])
+        # anchor = self.p.add_eyeptach(anchor)
+
+        positive = self.p.subtract_backgroud(positive_tuple[0])
+        # positive = self.p.add_eyeptach(positive)
+        
+        negative = self.p.subtract_backgroud(negative_tuple[0])
+        # negative = self.p.add_eyeptach(negative)
+
+        anchor = cv2.cvtColor(anchor,cv2.COLOR_BGR2RGB)
+        positive = cv2.cvtColor(positive,cv2.COLOR_BGR2RGB)
+        negative = cv2.cvtColor(negative,cv2.COLOR_BGR2RGB)
+        
+        anchor = Image.fromarray(anchor)
+        positive = Image.fromarray(positive)
+        negative = Image.fromarray(negative)
 
         transform=transforms.Compose([transforms.ToTensor()])
 
@@ -163,10 +178,6 @@ class EycDataset(Dataset):
         # anchor = anchor.resize((216, 216), Image.ANTIALIAS)
         # positive = positive.resize((216, 216), Image.ANTIALIAS)
         # negative = negative.resize((216, 216), Image.ANTIALIAS)
-
-        anchor = ImageOps.equalize(anchor)
-        positive = ImageOps.equalize(positive)
-        negative = ImageOps.equalize(negative)
 
         anchor = transform(anchor)
         positive = transform(positive)

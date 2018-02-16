@@ -15,46 +15,43 @@ class Preprocess:
 
         eyes = self.eye_cascade.detectMultiScale(gray)
 
-        if len(eyes) > 0:
-
+        if len(eyes) == 0:
+            eyes = [(127, 127, 30, 30)]
+        else:
             eyes= sorted(eyes,key=lambda x:x[2], reverse=True)
 
-            correct_eye = ()
-            for eye in eyes:
-                (ex,ey,ew,eh) = eye
-                if (ex+ew+20 < 225 and ex-20 > 0 and ey+eh+20 < 225 and ey-20 > 0):
-                    correct_eye = eye
-                    break
-            
-            if len(correct_eye) == 0:
-                print("No eye found")
-                return None
-
+        correct_eye = ()
+        for eye in eyes:
+            (ex,ey,ew,eh) = eye
+            if (ex+ew+20 < 225 and ex-20 > 0 and ey+eh+20 < 225 and ey-20 > 0):
+                correct_eye = eye
+                break
+        
+        if len(correct_eye) == 0:
+            (ex, ey, ew, eh) = (127, 127, 30, 30)
+        else:
             (ex,ey,ew,eh) = correct_eye
 
-            roi = img[ey-15:ey+eh+15, ex-15:ex+ew+15]
+        roi = img[ey-15:ey+eh+15, ex-15:ex+ew+15]
 
-            # Now create a mask of patch and create its inverse mask also
-            patch_resized = cv2.resize(self.patch, (ew+30, eh+30), interpolation = cv2.INTER_AREA)
+        # Now create a mask of patch and create its inverse mask also
+        patch_resized = cv2.resize(self.patch, (ew+30, eh+30), interpolation = cv2.INTER_AREA)
 
-            if (ex + (ex+ew))/2 > 112:
-                patch_resized = cv2.flip( patch_resized, 1 )
+        if (ex + (ex+ew))/2 > 112:
+            patch_resized = cv2.flip( patch_resized, 1 )
 
-            patch2gray = cv2.cvtColor(patch_resized,cv2.COLOR_BGR2GRAY)
-            ret, mask = cv2.threshold(patch2gray, 10, 255, cv2.THRESH_BINARY)
-            mask_inv = cv2.bitwise_not(mask)
+        patch2gray = cv2.cvtColor(patch_resized,cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(patch2gray, 10, 255, cv2.THRESH_BINARY)
+        mask_inv = cv2.bitwise_not(mask)
 
-            img_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
-            patch_fg = cv2.bitwise_and(patch_resized,patch_resized,mask = mask)
+        img_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
+        patch_fg = cv2.bitwise_and(patch_resized,patch_resized,mask = mask)
 
-            dst = cv2.add(img_bg,patch_fg)
+        dst = cv2.add(img_bg,patch_fg)
 
-            img[ey-15:ey+eh+15, ex-15:ex+ew+15] = dst
-            
-            return img
-
-        else:
-            return None
+        img[ey-15:ey+eh+15, ex-15:ex+ew+15] = dst
+        
+        return img
 
     def subtract_backgroud(self, img_path):
         

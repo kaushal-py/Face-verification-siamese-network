@@ -9,7 +9,7 @@ from siamese import SiameseNetwork
 from torch.autograd import Variable
 import test
 
-epoch_num = 1000
+epoch_num = 30
 image_num = 800
 train_batch_size = 100
 iteration_number = 0
@@ -18,8 +18,8 @@ loss_history = []
 
 def main():
     dataset = EycDataset(train=True)
-    # net = SiameseNetwork().cuda()
-    net = torch.load('models/model_triplet_pr_po_max_pool_fix.pt')
+    net = SiameseNetwork().cuda()
+    # net = torch.load('models/model_triplet_pr_po_max_pool_fix.pt')
     print("model loaded")
     
     train_dataloader = DataLoader(dataset,
@@ -32,7 +32,8 @@ def main():
 
     for epoch in range(0,epoch_num):
         if epoch%10 == 0:
-            test.test()
+            test.test(True)
+            test.test(False)
 
         for i, data in enumerate(train_dataloader):
             
