@@ -24,15 +24,11 @@ dataset_post = EycDataset("post-post")
 
 dataloader_pre = DataLoader(dataset_pre,
                         shuffle=True,
-                        num_workers=8,
+                        num_workers=4,
                         batch_size=1)
 dataloader_post = DataLoader(dataset_post,
                         shuffle=True,
-                        num_workers=8,
-                        batch_size=1)
-dataloader_pre_post = DataLoader(dataset_pre_post,
-                        shuffle=True,
-                        num_workers=8,
+                        num_workers=4,
                         batch_size=1)
 
 print("Loading models.. ")
@@ -53,13 +49,18 @@ def intro():
     
     size = 67
     images = 56
-    wait_time = 0.05
+    wait_time = 0.1
     
     _thread.start_new_thread(pre_post_comparisons, (wait_time,))
     
     return render_template("intro.html", size=size, images=images)
 
 def pre_post_comparisons(wait_time):
+
+    dataloader_pre_post = DataLoader(dataset_pre_post,
+                        shuffle=True,
+                        num_workers=4,
+                        batch_size=1)
     
     while(True):
         data_iter = iter(dataloader_pre_post)
@@ -111,6 +112,11 @@ def display_vector():
     return render_template('vector.html')
 
 def vector():
+    dataloader_pre_post = DataLoader(dataset_pre_post,
+                        shuffle=True,
+                        num_workers=1,
+                        batch_size=1)
+
     data_iter = iter(dataloader_pre_post)
 
     while True:
@@ -146,6 +152,11 @@ def display_triplet():
     return render_template('triplet.html')
 
 def triplet():
+    dataloader_pre_post = DataLoader(dataset_pre_post,
+                        shuffle=True,
+                        num_workers=1,
+                        batch_size=1)
+
     data_iter = iter(dataloader_pre_post)
 
     while True:
@@ -174,8 +185,12 @@ def triplet():
 
 
 
-@app.route('/intro')
-def homepage():    
+@app.route('/tripletpairs')
+def homepage():
+    dataloader_pre_post = DataLoader(dataset_pre_post,
+                        shuffle=True,
+                        num_workers=4,
+                        batch_size=1)
     image_set = []
     dataiter = iter(dataloader_pre_post)
 
@@ -198,6 +213,16 @@ def augmentpage():
 
     image_set = [ 'static/eycdata/augmented/post/'+img_class+'/'+image for image in image_set]
     return render_template("augment.html", images=image_set)
+
+@app.route('/preprocess')
+def preprocesspage():
+    class_set = sorted(os.listdir('static/eycdata/preprocess/'))
+    # print(img_set)
+    img_class = random.choice(class_set)
+    image_set = sorted(os.listdir('static/eycdata/preprocess/'+img_class))
+
+    image_set = [ 'static/eycdata/augmented/post/'+img_class+'/'+image for image in image_set]
+    return render_template("preprocess.html", images=image_set)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8000, debug=True)
