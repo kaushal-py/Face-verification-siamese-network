@@ -16,6 +16,7 @@ import pandas as pd
 import shutil
 from flask_socketio import SocketIO, send
 import _thread
+from threading import Thread
 
 app = Flask(__name__)
 app.config['CACHE_TYPE'] = "null"
@@ -50,9 +51,6 @@ cnt_pre_name = []
 cnt_post_cnt = []
 cnt_post_name = []
 
-img_output_pre = []
-img_output_post = []
-
 @app.route("/display-single")
 def display():
     return render_template('/display.html')
@@ -67,6 +65,102 @@ def result_directory():
     pre_match = [pre_match_dist,pre_match_img,pre_match_old]
     post_match = [post_match_dist,post_match_img,post_match_old]
     return render_template("result-directory.html", pre_match = pre_match, post_match = post_match, match = match, ps_pre = cnt_pre_name, ps_post = cnt_post_name)
+
+def processing_pre(dirpre,listpre):
+    dataset_pre = AppDatasetDuplicates(dirpre,dirpre,True)
+    dataloader_pre = DataLoader(dataset_pre,
+                        shuffle=False,
+                        num_workers=4,
+                        batch_size=1)
+
+    data_iter_pre = iter(dataloader_pre)
+
+    csv_pre = open("static/pre_values.csv",'a')
+
+    for x in range(len(listpre)):
+
+        (img0, img1) = next(data_iter_pre)
+
+        # Calculate distance
+        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        # img0, img1 = Variable(img0), Variable(img1)
+        (img0_output_pre, img1_output, _)  = net_pre(img0, img1, img0)
+        img1_output = img1_output.data.cpu().numpy()[0]
+        output_pre = str(img1_output.tolist())[1:-1]
+        
+        df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
+
+        img0_output_pre = img0_output_pre.data.cpu().numpy()[0]
+
+        for y in range(0,df_pre.count()[0]-1):
+            get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
+            euclidean_distance = np.linalg.norm(img0_output_pre - get_val)
+            if euclidean_distance < 0.1:
+                pre_match_dist.append(euclidean_distance)
+                pre_match_img.append("/images/pre/"+listpre[x])
+                pre_match_old.append(df_pre.iloc[y][0])
+            else :
+                csv_img = open("static/images.csv",'a')
+                csv_img.write("\n/images/pre/"+listpre[x]+", "+str(1))
+                csv_img.close()
+
+        csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
+        img_name = "\nimages/pre/"+listpre[x]
+
+        socketio.emit('pre-model', {'pre_model_i' : x+1,
+                    'pre_model_img' : img_name, 
+                    'total' : len(listpre)})
+    
+    csv_pre.close()
+
+def processing_post(dirpost,listpost):
+
+    dataset_post = AppDatasetDuplicates(dirpost,dirpost,True)
+    dataloader_post = DataLoader(dataset_post,
+                        shuffle=False,
+                        num_workers=4,
+                        batch_size=1)
+
+    data_iter_post = iter(dataloader_post)
+    
+    csv_post = open("static/post_values.csv",'a')
+
+    for x in range(len(listpost)):
+
+        (img0, img1) = next(data_iter_post)
+
+        # Calculate distance
+        # img0, img1 = Variable(img0), Variable(img1)
+        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
+        (img0_output_post, img1_output, _)  = net_post(img0, img1, img0)
+        img1_output = img1_output.data.cpu().numpy()[0]
+        output_post = str(img1_output.tolist())[1:-1]
+
+        df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
+
+        img0_output_post = img0_output_post.data.cpu().numpy()[0]
+
+        for y in range(0,df_post.count()[0]-1):
+            get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
+            euclidean_distance = np.linalg.norm(img0_output_post - get_val)
+            if euclidean_distance < 0.1:
+                post_match_dist.append(euclidean_distance)
+                post_match_img.append("/images/post/"+listpost[x])
+                post_match_old.append(df_post.iloc[y][0])
+            else :
+                csv_img = open("static/images.csv",'a')
+                csv_img.write("\n/images/post/"+listpost[x]+", "+str(1))
+                csv_img.close()
+
+        csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
+
+        img_name = "\nimages/post/"+listpost[x]
+
+        socketio.emit('post-model', {'post_model_i' : x+1,
+                    'post_model_img' : img_name,
+                    'total' : len(listpost)})
+    
+    csv_post.close()
 
 def processing():
 
@@ -85,11 +179,17 @@ def processing():
     del cnt_post_cnt[:]
     del cnt_post_name[:]
 
-    del img_output_pre[:]
-    del img_output_post[:]
-
     pref = os.path.join(pre_path, "pre-directory.zip")
     postf = os.path.join(post_path, "pre-directory.zip")
+
+    #Delete directory if already exists
+    for x in os.listdir('static/upload/dir/pre'):
+        if os.path.isdir('static/upload/dir/pre/'+str(x)):
+            shutil.rmtree('static/upload/dir/pre/'+str(x))
+    
+    for x in os.listdir('static/upload/dir/post/'):
+        if os.path.isdir('static/upload/dir/post/'+str(x)):
+            shutil.rmtree('static/upload/dir/post/'+str(x))
 
     # Extract Zip files
     zip_ref = zipfile.ZipFile(pref, 'r')
@@ -117,7 +217,6 @@ def processing():
     listpost = sorted(os.listdir(dirpost))
 
     for x in range (0,len(listpre)):
-
         # Create folder and move image to that folder
         os.mkdir(dirpre+"/"+str(x))
         os.mkdir(dirpost+"/"+str(x))
@@ -128,89 +227,13 @@ def processing():
         os.rename(dirpre+"/"+listpre[x],pref)
         os.rename(dirpost+"/"+listpost[x],postf)
 
-    # Load Images
-    dataset_pre = AppDatasetDuplicates(dirpre,dirpre,True)
-    dataloader_pre = DataLoader(dataset_pre,
-                        shuffle=False,
-                        num_workers=4,
-                        batch_size=1)
-
-    dataset_post = AppDatasetDuplicates(dirpost,dirpost,True)
-    dataloader_post = DataLoader(dataset_post,
-                        shuffle=False,
-                        num_workers=4,
-                        batch_size=1)
-
     dataset = AppDatasetDuplicates(dirpre,dirpost,False)
     dataloader = DataLoader(dataset,
                         shuffle=False,
                         num_workers=4,
                         batch_size=1)
 
-    data_iter_pre = iter(dataloader_pre)
-    data_iter_post = iter(dataloader_post)
     data_iter = iter(dataloader)
-
-    csv_pre = open("static/pre_values.csv",'a')
-    csv_post = open("static/post_values.csv",'a')
-
-    # for x in range(len(listpre)):
-
-    #     Check Photoshop
-
-    #     cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
-    #     if cnt_pre > 100:
-    #         cnt_pre_cnt.append(cnt_pre)
-    #         cnt_pre_name.append("static/images/pre/"+listpre[x])
-
-    #     if cnt_post > 100:
-    #         cnt_post_cnt.append(cnt_post)
-    #         cnt_post_name.append("static/images/post/"+listpost[x])
-
-    for x in range(len(listpre)):
-
-        (img0, img1) = next(data_iter_pre)
-
-        # Calculate distance
-        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
-        # img0, img1 = Variable(img0), Variable(img1)
-        (img0_output_pre, img1_output, _)  = net_pre(img0, img1, img0)
-        img1_output = img1_output.data.cpu().numpy()[0]
-        output_pre = str(img1_output.tolist())[1:-1]
-        csv_pre.write("\nimages/pre/"+listpre[x]+", "+str(output_pre))
-        img_name = "\nimages/pre/"+listpre[x]
-
-        img0_output_pre = img0_output_pre.data.cpu().numpy()[0]
-        img_output_pre.append(img0_output_pre)
-
-        socketio.emit('pre-model', {'pre_model_i' : x+1,
-                    'pre_model_img' : img_name, 
-                    'total' : len(listpre)})
-    
-    csv_pre.close()
-    
-    for x in range(len(listpre)):
-
-        (img0, img1) = next(data_iter_post)
-
-        # Calculate distance
-        # img0, img1 = Variable(img0), Variable(img1)
-        img0, img1 = Variable(img0).cuda(), Variable(img1).cuda()
-        (img0_output_post, img1_output, _)  = net_post(img0, img1, img0)
-        img1_output = img1_output.data.cpu().numpy()[0]
-        output_post = str(img1_output.tolist())[1:-1]
-        csv_post.write("\nimages/post/"+listpost[x]+", "+output_post)
-
-        img_name = "\nimages/post/"+listpost[x]
-
-        img0_output_post = img0_output_post.data.cpu().numpy()[0]
-        img_output_post.append(img0_output_post)
-
-        socketio.emit('post-model', {'post_model_i' : x+1,
-                    'post_model_img' : img_name,
-                    'total' : len(listpre)})
-    
-    csv_post.close()
 
     for x in range(len(listpre)):
 
@@ -236,51 +259,34 @@ def processing():
         socketio.emit('pre-post-model', {'pp_model_i' : x+1,
                     'pp_model_img' : img_name,
                     'total' : len(listpre)})
-    
-    print("Done writing to csv")
-    
-    # Read csv here
-    df_pre = pd.read_csv("static/pre_values.csv",delimiter=', ')
-    df_post = pd.read_csv("static/post_values.csv",delimiter=', ')
 
-    for x in range(0,len(img_output_pre)):
-        for y in range(0,df_pre.count()[0]-1):
-            get_val = df_pre.iloc[y][1:129].as_matrix(columns=None)
-            euclidean_distance = np.linalg.norm(img_output_pre[x] - get_val)
-            if euclidean_distance < 0.1:
-                pre_match_dist.append(euclidean_distance)
-                pre_match_img.append("/images/pre/"+listpre[x])
-                pre_match_old.append(df_pre.iloc[y][0])
-            else :
-                csv_img = open("static/images.csv",'a')
-                csv_img.write("\n/images/pre/"+listpre[x]+", "+str(1))
-                csv_img.close()
+    pre = Thread(target=processing_pre,args=(dirpre,listpre))
+    post = Thread(target=processing_post,args=(dirpost,listpost))
 
-        img_name = "/images/pre/"+listpre[x]
-        socketio.emit('pre-compare', {'pre_compare_i' : x+1,
-                    'pre_compare_img' : img_name,
-                    'total' : len(listpre)})
-    
-    print("Calculated pre embeddings")
+    pre.start()
+    post.start()
 
-    for x in range(0,len(img_output_post)):
-        for y in range(0,df_post.count()[0]-1):
-            get_val = df_post.iloc[y][1:129].as_matrix(columns=None)
-            euclidean_distance = np.linalg.norm(img_output_post[x] - get_val)
-            if euclidean_distance < 0.1:
-                post_match_dist.append(euclidean_distance)
-                post_match_img.append("/images/post/"+listpost[x])
-                post_match_old.append(df_post.iloc[y][0])
-            else :
-                csv_img = open("static/images.csv",'a')
-                csv_img.write("\n/images/post/"+listpre[x]+", "+str(1))
-                csv_img.close()
+    # _thread.start_new_thread(processing_pre, ())
+    # _thread.start_new_thread(processing_post, ())
 
-        img_name = "/images/post/"+listpost[x]
-        socketio.emit('post-compare', {'post_compare_i' : x+1,
-                    'post_compare_img' : img_name,
-                    'total' : len(listpre)})
-        
+    pre.join()
+    post.join()
+
+    for x in range(10):
+
+        cnt_post, cnt_pre = checkPhotoshop(dirpre + "/" + str(x) + "/" , listpre[x],dirpost + "/" + str(x) + "/" , listpost[x])
+        if cnt_pre > 100:
+            cnt_pre_cnt.append(cnt_pre)
+            cnt_pre_name.append("static/images/pre/"+listpre[x])
+
+        if cnt_post > 100:
+            cnt_post_cnt.append(cnt_post)
+            cnt_post_name.append("static/images/post/"+listpost[x])
+            
+        socketio.emit('ps', {'i' : x+1,
+                    'img_name' : img_name,
+                    'total' : 10})
+
 
     for x in range(0,len(listpre)):
         os.rename(dirpre + "/" + str(x) + "/" + listpre[x],"static/images/pre/"+listpre[x])
@@ -288,7 +294,8 @@ def processing():
 
         shutil.rmtree(dirpre + "/" + str(x))
         shutil.rmtree(dirpost + "/" + str(x))
-    
+
+
     shutil.rmtree(dirpre)
     shutil.rmtree(dirpost)
 
@@ -308,10 +315,8 @@ def upload_directory():
     post.save(postf)
 
     _thread.start_new_thread(processing, ())
-    return render_template("processing.html")
-
+    return render_template("processing.html")    
     
-
 @app.route("/upload", methods=['POST'])
 def upload():
 
@@ -328,13 +333,13 @@ def upload():
     post.save(postf)
     
     # Check if image is Photoshopped
-    cnt_post, cnt_pre = checkPhotoshop(pre_path, "PRE.jpg", post_path, "POST.jpg")
+    c_post, c_pre = checkPhotoshop(pre_path, "PRE.jpg", post_path, "POST.jpg")
 
     # Load Images
     dataset = AppDataset()
     dataloader = DataLoader(dataset,
                         shuffle=False,
-                        num_workers=4,
+                        num_workers=1,
                         batch_size=1)
 
     data_iter = iter(dataloader)
@@ -351,11 +356,7 @@ def upload():
 
     euclidean_distance = euclidean_distance.data.cpu().numpy()[0][0]
 
-    # distances.append(euclidean_distance)
-    print(euclidean_distance)
-
-    return render_template("result-single.html", distance = euclidean_distance, cnt_post = cnt_post, cnt_pre=cnt_pre)
-
+    return render_template("result-single.html", distance = euclidean_distance, cnt_post = c_post, cnt_pre=c_pre)
 
 @app.route("/rejected-list")
 def fetchRejected():
