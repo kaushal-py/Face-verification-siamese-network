@@ -36,13 +36,10 @@ The system must be able to match with high level of accuracy that the patient in
 
 ### Setup Instructions
 
-1. Clone the repository
-`git clone https://gitlab.com/echodarkstar/EYC3PDBS3.git`
-
-2. Go to the root folder of the repository
+1. Go to the root folder of the repository
 `cd EYC3PDBS3`
 
-3. Create conda environment from the yml file
+2. Create conda environment from the yml file
 `conda env create -f environment.yml`
 
 > **Note**
@@ -50,6 +47,10 @@ The system must be able to match with high level of accuracy that the patient in
 
 4. Activate the Environment
 `source activate python35`
+
+5. Run the flask application inside main/demo for a visualisation of the algorithm in action.
+
+6. Run the flaks application inside main/app to view a demo of the end-user application.
 
 ### Developed by EYC3
 
